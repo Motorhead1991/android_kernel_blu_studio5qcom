@@ -380,6 +380,10 @@ KBUILD_AFLAGS_MODULE  := -DMODULE
 KBUILD_CFLAGS_MODULE  := -DMODULE
 KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
 
+#tianyu wangzhzh add on wangzhzh : add  tianyu macro definations to kernel build environments begin .
+KBUILD_CFLAGS+=${TY_CP_CFLAGS}
+#tianyu wangzhzh add on wangzhzh : add  tianyu macro definations to kernel build environments end .
+
 # Read KERNELRELEASE from include/config/kernel.release (if it exists)
 KERNELRELEASE = $(shell cat include/config/kernel.release 2> /dev/null)
 KERNELVERSION = $(VERSION)$(if $(PATCHLEVEL),.$(PATCHLEVEL)$(if $(SUBLEVEL),.$(SUBLEVEL)))$(EXTRAVERSION)
