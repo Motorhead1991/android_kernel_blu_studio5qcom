@@ -958,6 +958,19 @@ config TOUCHSCREEN_FT5X06
          To compile this driver as a module, choose M here: the
          module will be called ft5x06_ts.
 
+#gaohw add for CTP mstar
+config TY_TOUCHSCREEN_MSTAR
+       tristate "Mstar based touchscreens"
+       depends on I2C
+       default n
+       help
+         Say Y here if you have a Mstar based touchscreen.
+
+         If unsure, say N.
+
+         To compile this driver as a module, choose M here: the
+         module will be called mstar.
+
 config TOUCHSCREEN_GEN_VKEYS
        tristate "Touchscreen Virtual Keys Driver"
        help

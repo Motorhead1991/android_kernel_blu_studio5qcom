@@ -60,6 +60,16 @@
 			focaltech,fw-auto-cal;
 			focaltech,ignore-id-check;
 		};
+		mstar@26 {
+			compatible = "mstar,ms-msg21xx";
+			reg = <0x26>;
+			interrupt-parent = <&msmgpio>;
+			interrupts = <17 0x2>;
+			reset-gpios = <&msmgpio 16 0x00>;
+			interrupt-gpios = <&msmgpio 17 0x00>;
+			vdd-supply = <&pm8226_l19>;
+			vcc_i2c-supply = <&pm8226_lvs1>;
+		};
 	};
 
 	gen-vkeys {

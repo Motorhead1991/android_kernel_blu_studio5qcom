@@ -17,3 +17,8 @@
 /include/ "dsi-panel-nt35590-720p-cmd.dtsi"
 /include/ "dsi-panel-ssd2080m-720p-video.dtsi"
 /include/ "dsi-panel-jdi-1080p-video.dtsi"
+/*TYRD wuxh add for 5inch fwvga lcd on 20131226 begin */
+/include/ "dsi-panel-ty-5inch-otm8018b-fwvga-video.dtsi"
+/include/ "dsi-panel-ty-5inch-trust-otm8018b-fwvga-video.dtsi"
+/include/ "dsi-panel-ty-5inch-truly-fwvga-hx8379a-video.dtsi"
+/*TYRD wuxh add for 5inch fwvga lcd on 20131226 end */

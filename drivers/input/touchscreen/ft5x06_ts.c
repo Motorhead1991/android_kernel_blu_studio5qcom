@@ -208,6 +208,10 @@ struct ft5x06_ts_data {
 #endif
 };
 
+#if defined(CONFIG_TOUCHSCREEN_FT5X06) && defined(CONFIG_TY_TOUCHSCREEN_MSTAR) 
+ unsigned char ft_probe_flag = 0;
+#endif
+
 static int ft5x06_i2c_read(struct i2c_client *client, char *writebuf,
 			   int writelen, char *readbuf, int readlen)
 {
@@ -1535,6 +1539,12 @@ static int ft5x06_ts_probe(struct i2c_client *client,
 		dev_err(&client->dev, "version read failed");
 		goto free_reset_gpio;
 	}
+	/* lichm merge begin */
+	#if defined(CONFIG_TOUCHSCREEN_FT5X06) && defined(CONFIG_TY_TOUCHSCREEN_MSTAR) 
+	 ft_probe_flag = 1;
+	printk("FocalTech tp detected successfully\n");
+	#endif
+	/* lichm merge end */
 
 	dev_info(&client->dev, "Device ID = 0x%x\n", reg_value);
 
