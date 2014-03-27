@@ -961,6 +961,22 @@ static void qup_i2c_recover_bus_busy(struct qup_i2c_dev *dev)
 recovery_end:
 	enable_irq(dev->err_irq);
 }
+/****************ADD BY GAOHW BEGIN***********************/
+#if defined(TYQ_MSG_TP_I2C_SPEED_100K)
+int ty_chage_i2c_speed_rate(struct i2c_adapter *adap,int speed)
+{
+	struct qup_i2c_dev *dev = i2c_get_adapdata(adap);
+	struct platform_device  * device = container_of(dev->dev,struct platform_device,dev);
+	int old_speed = 0;
+	dev->clk_ctl = 0;
+	old_speed = (dev->pdata)->clk_freq;
+	(dev->pdata)->clk_freq = speed;
+	dev->one_bit_t = (USEC_PER_SEC/(dev->pdata)->clk_freq) + 1;
+	printk("gaohw qup_i2c=%d ty_chage_i2c_speed_rate from speed = %d to speed = %d\n",device->id,old_speed,(dev->pdata)->clk_freq);
+	return 0 ;
+}
+#endif 
+/****************ADD BY GAOHW END***********************/
 
 static int
 qup_i2c_xfer(struct i2c_adapter *adap, struct i2c_msg msgs[], int num)
