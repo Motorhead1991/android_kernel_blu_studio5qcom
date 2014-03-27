@@ -208,8 +208,29 @@ struct ft5x06_ts_data {
 #endif
 };
 
+#ifndef CONFIG_TOUCHSCREEN_GEN_VKEYS
+#define TYN_VIRTAUL_KEY_FRAMEWORK
+#ifdef TYN_VIRTAUL_KEY_FRAMEWORK
+static int fts_creat_virtual_key_sysfs(void);
+#endif
+#endif
 #if defined(CONFIG_TOUCHSCREEN_FT5X06) && defined(CONFIG_TY_TOUCHSCREEN_MSTAR) 
  unsigned char ft_probe_flag = 0;
+#endif
+#if defined (TYQ_FOCALTECH_TP_CHARGEING_INTERFERENCE)
+ char tp_usb_charge_flag = 0;
+ char is_tp_resum = 1;
+ void  fts_ctpm_charge_mode(char flag);
+#endif
+
+#define CONFIG_SUPPORT_FTS_CTP_UPG
+
+#ifdef CONFIG_SUPPORT_FTS_CTP_UPG
+#define FT_FIVE_FINGERS_SUPPORT
+static int touch_ctrl_init(void *touch);
+
+static struct ft5x06_ts_data* g_stpTouchData = NULL;
+static char is_upgrading = 0;
 #endif
 
 static int ft5x06_i2c_read(struct i2c_client *client, char *writebuf,
@@ -530,7 +551,9 @@ static int ft5x06_ts_suspend(struct device *dev)
 	}
 
 	data->suspended = true;
-
+	#if defined (TYQ_FOCALTECH_TP_CHARGEING_INTERFERENCE)
+	is_tp_resum = 0;
+	#endif
 	return 0;
 
 pwr_off_fail:
@@ -574,7 +597,10 @@ static int ft5x06_ts_resume(struct device *dev)
 	}
 
 	msleep(data->pdata->soft_rst_dly);
-
+	#if defined (TYQ_FOCALTECH_TP_CHARGEING_INTERFERENCE)
+	is_tp_resum = 1;
+	fts_ctpm_charge_mode(tp_usb_charge_flag);
+	#endif
 	enable_irq(data->client->irq);
 
 	data->suspended = false;
@@ -590,7 +616,10 @@ static int fb_notifier_callback(struct notifier_block *self,
 	int *blank;
 	struct ft5x06_ts_data *ft5x06_data =
 		container_of(self, struct ft5x06_ts_data, fb_notif);
-
+	#ifdef CONFIG_SUPPORT_FTS_CTP_UPG
+	if(is_upgrading == 1)
+		return 0;
+	#endif
 	if (evdata && evdata->data && event == FB_EVENT_BLANK &&
 			ft5x06_data && ft5x06_data->client) {
 		blank = evdata->data;
@@ -1205,10 +1234,32 @@ static int ft5x06_get_dt_coords(struct device *dev, char *name,
 		pdata->panel_maxx = coords[2];
 		pdata->panel_maxy = coords[3];
 	} else if (!strcmp(name, "focaltech,display-coords")) {
+		#if defined (TYQ_TP_THIRD_MENU_480x800)
+		pdata->x_min =0;
+		pdata->y_min = 0;
+		pdata->x_max = 480;
+		pdata->y_max =  800;
+		#elif  defined (TYQ_TP_THIRD_MENU_480x854)
+		pdata->x_min =0;
+		pdata->y_min = 0;
+		pdata->x_max = 480;
+		pdata->y_max =  854;
+		#elif  defined (TYQ_TP_THIRD_MENU_540x960)
+		pdata->x_min =0;
+		pdata->y_min = 0;
+		pdata->x_max = 540;
+		pdata->y_max =  960;
+		#elif  defined (TYQ_TP_THIRD_MENU_720x1280)
+		pdata->x_min =0;
+		pdata->y_min = 0;
+		pdata->x_max = 720;
+		pdata->y_max =  1280;
+		#else
 		pdata->x_min = coords[0];
 		pdata->y_min = coords[1];
 		pdata->x_max = coords[2];
 		pdata->y_max = coords[3];
+		#endif
 	} else {
 		dev_err(dev, "unsupported property %s\n", name);
 		return -EINVAL;
@@ -1418,6 +1469,9 @@ static int ft5x06_ts_probe(struct i2c_client *client,
 		return -ENOMEM;
 	}
 
+#ifdef CONFIG_SUPPORT_FTS_CTP_UPG
+	g_stpTouchData = data;
+#endif
 	if (pdata->fw_name) {
 		len = strlen(pdata->fw_name);
 		if (len > FT_FW_NAME_MAX_LEN - 1) {
@@ -1667,6 +1721,15 @@ static int ft5x06_ts_probe(struct i2c_client *client,
 	register_early_suspend(&data->early_suspend);
 #endif
 
+#ifndef CONFIG_TOUCHSCREEN_GEN_VKEYS
+#ifdef TYN_VIRTAUL_KEY_FRAMEWORK
+ fts_creat_virtual_key_sysfs();
+#endif
+#endif
+
+#ifdef CONFIG_SUPPORT_FTS_CTP_UPG
+	touch_ctrl_init(data);
+#endif
 	return 0;
 
 free_debug_dir:
@@ -1771,6 +1834,1379 @@ static struct i2c_driver ft5x06_ts_driver = {
 	.id_table = ft5x06_ts_id,
 };
 
+#ifndef CONFIG_TOUCHSCREEN_GEN_VKEYS
+#ifdef TYN_VIRTAUL_KEY_FRAMEWORK
+///////////////////////////////////////////////////////////////////////
+
+/*
+sysfs file format:
+key tyep:key value:key center x:key center y:key width:key height
+
+#define TOUCH_Y_MAX 836
+#define SCREEN_Y_MAX 800
+
+*/
+static ssize_t ty_touch_virtual_keys_show(struct kobject *kobj,
+										  struct kobj_attribute *attr, char *buf)
+{
+#if defined(TYQ_TP_THIRD_MENU_540x960)
+	return snprintf(buf, 200,
+		__stringify(EV_KEY) ":" __stringify(KEY_MENU) ":120:1010:100:80"
+	   ":" __stringify(EV_KEY) ":" __stringify(KEY_HOMEPAGE) ":240:1010:100:80"
+	   ":" __stringify(EV_KEY) ":" __stringify(KEY_BACK) ":360:1010:100:80" 			   
+	   "\n");
+#elif defined (TYQ_TP_THIRD_MENU_480x800)		
+	return snprintf(buf, 200,
+			__stringify(EV_KEY) ":" __stringify(KEY_HOMEPAGE) ":240:850:100:80"
+		   ":" __stringify(EV_KEY) ":" __stringify(KEY_MENU) ":120:850:100:80"
+		   ":" __stringify(EV_KEY) ":" __stringify(KEY_BACK) ":360:850:100:80"				   
+		   "\n");	
+#elif defined (TYQ_TP_THIRD_MENU_480x854)		
+	return snprintf(buf, 200,
+			__stringify(EV_KEY) ":" __stringify(KEY_HOMEPAGE) ":240:900:100:80"
+		   ":" __stringify(EV_KEY) ":" __stringify(KEY_MENU) ":120:900:100:80"
+		   ":" __stringify(EV_KEY) ":" __stringify(KEY_BACK) ":360:900:100:80"				   
+		   "\n");	
+	//tydrv pengwei addfor fwvga virtual key
+#elif defined (TYQ_TP_FOUR_MENU_480x854)		
+	return snprintf(buf, 200,
+		__stringify(EV_KEY) ":" __stringify(KEY_HOMEPAGE)  ":67:1000:135:60"
+		":" __stringify(EV_KEY) ":" __stringify(KEY_MENU)	":202:1000:135:60"
+		":" __stringify(EV_KEY) ":" __stringify(KEY_BACK) ":337:1000:135:60"
+		":" __stringify(EV_KEY) ":" __stringify(KEY_SEARCH)   ":472:1000:135:60"
+		"\n");
+	
+#elif defined(TYQ_TP_THIRD_MENU_720x1280)
+#if 0// defined(TYQ_TBW5933_SUPPORT)
+	return snprintf(buf, 200,
+		__stringify(EV_KEY) ":" __stringify(KEY_MENU) ":90:1007:100:80"
+	   ":" __stringify(EV_KEY) ":" __stringify(KEY_HOME) ":263:1007:100:80"
+	   ":" __stringify(EV_KEY) ":" __stringify(KEY_BACK) ":428:1007:100:80" 			   
+	   "\n");
+#else
+	return snprintf(buf, 200,
+		__stringify(EV_KEY) ":" __stringify(KEY_MENU) ":120:1343:100:80"
+	   ":" __stringify(EV_KEY) ":" __stringify(KEY_HOMEPAGE) ":350:1343:100:80"
+	   ":" __stringify(EV_KEY) ":" __stringify(KEY_BACK) ":570:1343:100:80" 			   
+	   "\n");
+#endif
+#else
+	return snprintf(buf, 200,
+		__stringify(EV_KEY) ":" __stringify(KEY_MENU) ":120:1010:100:80"
+	   ":" __stringify(EV_KEY) ":" __stringify(KEY_HOMEPAGE) ":240:1010:100:80"
+	   ":" __stringify(EV_KEY) ":" __stringify(KEY_BACK) ":360:1010:100:80" 			   
+	   "\n");
+#endif
+
+}
+
+static struct kobj_attribute ty_touch_virtual_keys_attr = {
+	.attr = {
+		.name = "virtualkeys.ft5x06_ts",
+		.mode = S_IRUGO,
+	},
+	.show = &ty_touch_virtual_keys_show,
+};
+
+
+//**********************************************************************//
+static struct attribute *ty_touch_properties_attrs[] = {
+	&ty_touch_virtual_keys_attr.attr,
+	NULL
+};
+
+static struct attribute_group ty_touch_properties_attr_group = {
+	.attrs = ty_touch_properties_attrs,
+};
+
+//**********************************************************************//
+
+static int fts_creat_virtual_key_sysfs(void)
+{
+	struct kobject *properties_kobj;
+	int ret = 0;
+
+	properties_kobj = kobject_create_and_add("board_properties", NULL);
+	if (properties_kobj)
+		ret = sysfs_create_group(properties_kobj,
+								 &ty_touch_properties_attr_group);
+	if (!properties_kobj || ret)
+		printk("failed to create board_properties\n");
+
+	return ret;
+}
+
+////////////////////////////////////////////////////////////////////////////
+
+
+#endif
+#endif
+#ifdef CONFIG_SUPPORT_FTS_CTP_UPG
+#include <linux/cdev.h>
+#include <linux/uaccess.h>
+#include <linux/semaphore.h>
+typedef unsigned char         FTS_BYTE;     //8 bit
+typedef unsigned short        FTS_WORD;    //16 bit
+typedef unsigned int          FTS_DWRD;    //16 bit
+typedef unsigned char         FTS_BOOL;    //8 bit
+
+#define FTS_NULL               0x0
+#define FTS_TRUE               0x01
+#define FTS_FALSE              0x0
+#define CFG_MAX_TOUCH_POINTS	5
+#define I2C_CTPM_ADDRESS       0x76
+#define FT_DEFAULT_POINTERS     CFG_MAX_TOUCH_POINTS
+//interrupt mode setting
+#define INTERRUPT_TRIGGER_MODE   1
+#define INTERRUPT_QUERY_MODE     0 
+#define INTERRUPT_MODE_TRIGGER
+
+#define TRUlY_VENDOR_ID_NO		0x5a
+#define TRUlY_VENDOR_ID_STR		"TRULY_TP"
+#define TRUlY_VENDOR_ID_NO_2		0xda
+#define TRUlY_VENDOR_ID_STR_2		"TRULY_TP-2"
+#define BYD_VENDOR_ID_NO		0x59
+#define BYD_VENDOR_ID_STR		"BYD_TP"
+#define O_FILM_VENDOR_ID_NO		0x51
+#define O_FILM_VENDOR_ID_STR		"O-FILM_TP"
+#define O_FILM_VENDOR_ID_NO_2		0xd1
+#define O_FILM_VENDOR_ID_STR_2		"O-FILM_TP-2"
+#define BM_VENDOR_ID_NO		0x5d
+#define BM_VENDOR_ID_STR		"BM_TP"
+#define LCE_VENDOR_ID_NO		0x87
+#define LCE_VENDOR_ID_STR		"LCE_TP"
+
+
+
+
+typedef enum
+{
+	ERR_OK,
+	ERR_MODE,
+	ERR_READID,
+	ERR_ERASE,
+	ERR_STATUS,
+	ERR_ECC
+}E_UPGRADE_ERR_TYPE;
+
+struct ty_touch_fmupgrade_S
+{
+  unsigned int	touchType;
+  unsigned long ulCRC;
+  unsigned long ulReserved;
+  unsigned long bufLength;
+  void* 		bufAddr;
+};
+
+DEFINE_SEMAPHORE(upgrade_lock);
+static int g_iINTMode =  INTERRUPT_TRIGGER_MODE;
+
+static int   g_iMaxFingers = CFG_MAX_TOUCH_POINTS;
+
+static int g_bConfigPointer = FTS_FALSE;
+static int g_bConfigINTMode = FTS_FALSE;
+u8   g_u8UpgradeFWResult = 0;
+
+static int fts_i2c_read(
+	struct ft5x06_ts_data* hTouch,
+    u8  reg,
+    u8* buffer,
+    u32 len)
+{
+	int ret;
+	ret = ft5x06_i2c_read(hTouch->client,&reg,1, buffer, len);
+	if(ret<0)
+		return ret;
+	else
+	 	return FTS_TRUE;
+}
+
+static int fts_i2c_write(
+    struct ft5x06_ts_data* hTouch,
+    u8  reg,
+    u8* buffer,
+    u32 len)
+{
+	int ret;
+	ret = ft5x06_i2c_write(hTouch->client, buffer,len);
+	if(ret < 0 ) 
+		return ret;
+	else
+	 	return FTS_TRUE;
+}
+
+int ty_ft5x0x_write_reg(struct ft5x06_ts_data* hTouch, u8 regaddr, u8 regvalue)
+{
+	unsigned char buf[2] = {0};
+	buf[0] = regaddr;
+	buf[1] = regvalue;
+
+	return fts_i2c_write(hTouch,0,buf,sizeof(buf));
+}
+
+
+int ty_ft5x0x_read_reg(struct ft5x06_ts_data* hTouch, u8 regaddr, u8 *regvalue)
+{
+	return fts_i2c_read(hTouch,regaddr,regvalue,1);//ft5x0x_i2c_Read(client, &regaddr, 1, regvalue, 1);
+}
+
+#if defined (TYQ_FOCALTECH_TP_CHARGEING_INTERFERENCE)
+void  fts_ctpm_charge_mode(char flag)
+{
+	//char value;
+	ty_ft5x0x_write_reg(g_stpTouchData,0x8b,flag);
+	//ft5x0x_read_reg(g_stpTouchData,0x8b,&value);
+	//printk("****************************fts_ctpm_charge_mode flag = %d ***********************\n",flag);
+	
+}
+#endif
+
+int fts_ctpm_auto_clb(struct ft5x06_ts_data* hTouch)
+{
+	unsigned char uc_temp = 0x00;
+	int  i = 0;
+
+	/*start auto CLB */
+	msleep(500);
+
+	ty_ft5x0x_write_reg(hTouch, 0, 0x40);
+	/*make sure already enter factory mode */
+	msleep(300);
+	/*write command to start calibration */
+	ty_ft5x0x_write_reg(hTouch, 2, 0x4);
+	msleep(300);
+	for (i = 0; i < 300; i++) {
+		ty_ft5x0x_read_reg(hTouch, 0, &uc_temp);
+		/*return to normal mode, calibration finish */
+		if (0x0 == ((uc_temp & 0x70) >> 4))
+		{
+			printk("ft calibration finish !\n");
+			break;
+		}
+	}
+
+	//msleep(200);
+	/*calibration OK */
+	msleep(300);
+	ty_ft5x0x_write_reg(hTouch, 0, 0x40);	/*goto factory mode for store */
+	msleep(100);	/*make sure already enter factory mode */
+	ty_ft5x0x_write_reg(hTouch, 2, 0x5);	/*store CLB result */
+	msleep(300);
+	ty_ft5x0x_write_reg(hTouch, 0, 0x00);	/*return to normal mode */
+	msleep(300);
+
+	/*store CLB result OK */
+	return 0;
+}
+
+void delay_qt_ms(unsigned long  w_ms)
+{
+
+
+	msleep(w_ms);
+	return;
+}
+
+#ifdef TP_UPGRADE_DEBUG
+
+#define fts_debug(fmt, args...) \
+	do {\
+			printk("fts: "fmt, ##args);\
+	} while (0)
+#else
+
+#define fts_debug(fmt, args...)
+
+#endif 
+
+
+/*
+[function]: 
+    callback: read data from ctpm by i2c interface,implemented by special user;
+[parameters]:
+    bt_ctpm_addr[in]    :the address of the ctpm;
+    pbt_buf[out]        :data buffer;
+    dw_lenth[in]        :the length of the data buffer;
+[return]:
+    FTS_TRUE     :success;
+    FTS_FALSE    :fail;
+*/
+static FTS_BOOL i2c_read_interface(FTS_BYTE bt_ctpm_addr, FTS_BYTE* pbt_buf, FTS_DWRD dw_lenth)
+{
+    int ret;
+	
+    //ret=fts_i2c_read(g_stpTouchData, pbt_buf[0],&pbt_buf[1], dw_lenth-1);
+    ret = i2c_master_recv(g_stpTouchData->client,pbt_buf, dw_lenth);
+    if(ret<=0)
+    {
+        printk("[TSP]i2c_read_interface error\n");
+        return FTS_FALSE;
+    }
+
+    return FTS_TRUE;
+}
+
+/*
+[function]: 
+    callback: write data to ctpm by i2c interface,implemented by special user;
+[parameters]:
+    bt_ctpm_addr[in]    :the address of the ctpm;
+    pbt_buf[in]        :data buffer;
+    dw_lenth[in]        :the length of the data buffer;
+[return]:
+    FTS_TRUE     :success;
+    FTS_FALSE    :fail;
+*/
+static FTS_BOOL i2c_write_interface(FTS_BYTE bt_ctpm_addr, FTS_BYTE* pbt_buf, FTS_DWRD dw_lenth)
+{
+    int ret;
+    
+	//ret = fts_i2c_write(g_stpTouchData, pbt_buf[0],&pbt_buf[1], dw_lenth-1);
+	ret = i2c_master_send(g_stpTouchData->client,pbt_buf, dw_lenth);
+	if(ret < 0)
+	{
+		
+		printk("%s fail err = %x!!!\n", __func__,  ret);
+		return 0;
+	}
+	
+    return 1; 
+}
+
+
+/*
+[function]: 
+	write a value to register.
+[parameters]:
+	e_reg_name[in]	:register name;
+	pbt_buf[in]		:the returned register value;
+[return]:
+	FTS_TRUE	:success;
+	FTS_FALSE	:io fail;
+*/
+#if 0
+static FTS_BOOL fts_register_write(FTS_BYTE e_reg_name, FTS_BYTE b_data)
+{
+	FTS_BYTE write_cmd[2] = {0};
+
+	write_cmd[0] = e_reg_name;
+	write_cmd[1] = b_data;
+
+	/*call the write callback function*/
+	return i2c_write_interface(I2C_CTPM_ADDRESS, write_cmd, 2);
+	
+}
+#endif
+
+/*
+[function]: 
+    send a command to ctpm.
+[parameters]:
+    btcmd[in]        :command code;
+    btPara1[in]    :parameter 1;    
+    btPara2[in]    :parameter 2;    
+    btPara3[in]    :parameter 3;    
+    num[in]        :the valid input parameter numbers, if only command code needed and no parameters followed,then the num is 1;    
+[return]:
+    FTS_TRUE    :success;
+    FTS_FALSE    :io fail;
+*/
+static FTS_BOOL cmd_write(FTS_BYTE btcmd,FTS_BYTE btPara1,FTS_BYTE btPara2,FTS_BYTE btPara3,FTS_BYTE num)
+{
+    FTS_BYTE write_cmd[4] = {0};
+
+    write_cmd[0] = btcmd;
+    write_cmd[1] = btPara1;
+    write_cmd[2] = btPara2;
+    write_cmd[3] = btPara3;
+    return i2c_write_interface(I2C_CTPM_ADDRESS, write_cmd, num);
+}
+
+/*
+[function]: 
+    write data to ctpm , the destination address is 0.
+[parameters]:
+    pbt_buf[in]    :point to data buffer;
+    bt_len[in]        :the data numbers;    
+[return]:
+    FTS_TRUE    :success;
+    FTS_FALSE    :io fail;
+*/
+static FTS_BOOL byte_write(FTS_BYTE* pbt_buf, FTS_DWRD dw_len)
+{
+    
+    return i2c_write_interface(I2C_CTPM_ADDRESS, pbt_buf, dw_len);
+}
+
+/*
+[function]: 
+    read out data from ctpm,the destination address is 0.
+[parameters]:
+    pbt_buf[out]    :point to data buffer;
+    bt_len[in]        :the data numbers;    
+[return]:
+    FTS_TRUE    :success;
+    FTS_FALSE    :io fail;
+*/
+static FTS_BOOL byte_read(FTS_BYTE* pbt_buf, FTS_BYTE bt_len)
+{
+    return i2c_read_interface(I2C_CTPM_ADDRESS, pbt_buf, bt_len);
+}
+
+static FTS_BOOL fts_Upgraded(void)
+{
+	u8   u8Val;
+    u8   u8SleepCommand[2] = {0}; 
+
+	if(!g_stpTouchData)
+	{
+		printk("%s:g_stpTouchData is null.\n",__func__);
+		return 0;
+	}
+
+	fts_debug("enter %s.\n",__func__);	
+	//NvOsSleepMS(50);
+	
+#ifdef FT_FIVE_FINGERS_SUPPORT
+
+	mdelay(1);
+	u8Val = 0xFE;
+	
+	//version
+	if(!fts_i2c_read(g_stpTouchData, 0xA6, &u8Val, 1))
+	{
+		fts_debug("%s:get FW ver faild.\n",__func__);
+		u8Val = 0x01;
+	}
+	fts_debug("FT_Upgraded:Version=0x%x \n",u8Val);
+	
+	if((u8Val >= 0x1a))
+	{
+		mdelay(1);
+		u8Val = 0xFE;
+		if( FTS_TRUE == fts_i2c_read(g_stpTouchData, 0x90, &u8Val, 1))
+		{
+			if(g_iMaxFingers != u8Val)
+			{
+				mdelay(1);
+				g_bConfigPointer = FTS_TRUE;
+				
+				u8SleepCommand[0] = 0x90;
+				u8SleepCommand[1] = g_iMaxFingers;
+			    fts_i2c_write(g_stpTouchData, 0x0, u8SleepCommand, 2);
+				fts_debug("FT_Upgraded:Fingers=0x%x,fwfingers=0x%x\n",g_iMaxFingers,u8Val);
+			}
+		}
+		else
+		{
+			fts_debug("%s:get fingers faild.\n",__func__);
+			u8Val = FT_DEFAULT_POINTERS;
+		}
+		fts_debug("FT_Upgraded:Fingers=0x%x \n",g_iMaxFingers);
+	}
+#endif	
+	
+	u8Val = 0xFE;
+	if(!fts_i2c_read(g_stpTouchData, 0xA4, &u8Val, 1))
+	{
+		printk("%s:get FW ver faild.\n",__func__);
+	}
+	fts_debug("fts_Upgraded:IntMode=0x%x \n",u8Val);
+	
+#ifdef INTERRUPT_MODE_QUERY
+	if(u8Val == INTERRUPT_TRIGGER_MODE )
+	{
+		msleep(50);
+		//write
+		u8SleepCommand[0] = 0xa4;
+		u8SleepCommand[1] = INTERRUPT_QUERY_MODE; //QUERY
+	    fts_i2c_write(g_stpTouchData, 0x0, u8SleepCommand, 2);	
+
+		msleep(50);
+		
+		//read&check
+		u8Val = 20;
+		fts_i2c_read(g_stpTouchData, 0xa4, &u8Val, 1);
+		fts_debug("fts_Upgraded:intmode=0x%x\n",u8Val);
+		g_iINTMode = INTERRUPT_QUERY_MODE;
+		g_bConfigINTMode = FTS_TRUE;
+	}
+#endif
+
+#ifdef INTERRUPT_MODE_TRIGGER
+	if(u8Val == INTERRUPT_QUERY_MODE )
+	{
+		msleep(50);
+
+		//write
+		u8SleepCommand[0] = 0xa4;
+		u8SleepCommand[1] = INTERRUPT_TRIGGER_MODE; 
+	    fts_i2c_write(g_stpTouchData, 0x0, u8SleepCommand, 2);	
+
+		msleep(50);
+		//read&check
+		u8Val = 20;
+		fts_i2c_read(g_stpTouchData, 0xa4, &u8Val, 1);
+		fts_debug("fts_Upgraded:intmode=0x%x\n",u8Val);
+		g_iINTMode = INTERRUPT_TRIGGER_MODE;
+		g_bConfigINTMode = FTS_TRUE;
+	}
+#endif
+
+	return FTS_TRUE;
+	
+}
+
+
+/*
+[function]: 
+    burn the FW to ctpm.
+[parameters]:(ref. SPEC)
+    pbt_buf[in]    :point to Head+FW ;
+    dw_lenth[in]:the length of the FW + 6(the Head length);    
+    bt_ecc[in]    :the ECC of the FW
+[return]:
+    ERR_OK        :no error;
+    ERR_MODE    :fail to switch to UPDATE mode;
+    ERR_READID    :read id fail;
+    ERR_ERASE    :erase chip fail;
+    ERR_STATUS    :status error;
+    ERR_ECC        :ecc error.
+*/
+
+
+#define    TY_FTS_PACKET_LENGTH        32
+#if 0
+static unsigned char CTPM_FW_FILE[]=
+{
+//#include "ft_app.i"
+};
+#endif
+#define BL_VERSION_LZ4	0
+#define BL_VERSION_Z7	1
+#define BL_VERSION_GZF	2 
+
+static E_UPGRADE_ERR_TYPE  fts_ctpm_fw_upgrade(FTS_BYTE* pbt_buf, FTS_DWRD dw_lenth)
+{
+    FTS_BYTE reg_val[2] = {0};
+    FTS_DWRD i = 0;
+    u8 is_5336_new_bootloader = 0;
+    u8 is_5336_fwsize_30 = 0;
+   u8 readid=0;
+    FTS_DWRD  packet_number;
+    FTS_DWRD  j;
+    FTS_DWRD  temp = 0;
+    FTS_DWRD  lenght;
+    FTS_BYTE  packet_buf[TY_FTS_PACKET_LENGTH + 6];
+    FTS_BYTE  auc_i2c_write_buf[10];
+    FTS_BYTE bt_ecc;
+    int      i_is_new_protocol = 0;
+    int      i_ret;
+////////////////////////
+unsigned char au_delay_timing[44] = {30, 33, 36, 39, 42, 45, 27, 24,21,18,15,20,21,22,23,25,26,28,29,
+								31,32,34,35,37,38,40,10,11,12,13,14,16,17,18,19,1,2,3,4,5,6,7,8,9};
+    unsigned char jj = 0;
+///////////////////////
+
+	if(pbt_buf[dw_lenth-12] == 30)
+	{
+		is_5336_fwsize_30 = 1;
+	}
+	else 
+	{
+		is_5336_fwsize_30 = 0;
+	}
+
+	fts_debug("[TSP] :enter %s\n",__func__);
+/////////////////
+UPG_START:
+////////////
+	
+    /*********Step 1:Reset  CTPM *****/
+    /*write 0xaa to register 0xfc*/
+    //fts_register_write(0xfc,0xaa);
+/*********Step 1:HardReset  CTPM wang_gj  add begin*****/
+	gpio_direction_output(16, 0);
+	delay_qt_ms(50);
+	gpio_direction_output(16, 1);
+/*********Step 1:HardReset  CTPM wang_gj  add end*****/
+	//delay_qt_ms(50);
+    fts_debug("fts_register_write:%d\n",__LINE__);
+     /*write 0x55 to register 0xfc*/
+    //fts_register_write(0xfc,0x55);
+    fts_debug("[TSP] Step 1: Reset CTPM test\n");
+    fts_debug("fts_register_write:%d\n",__LINE__);
+    //delay_qt_ms(10);
+/*#if defined (TYQ_TBW5925_SUPPORT)   
+  //  delay_qt_ms(30); //25~40    30
+#else
+   delay_qt_ms(20);
+#endif
+*/
+////////////////////////////////////////////////
+	delay_qt_ms(au_delay_timing[jj]);
+	printk("********jj=%d***********\n",jj);
+/////////////////////////////////////////
+    /*********Step 2:Enter upgrade mode *****/
+    auc_i2c_write_buf[0] = 0x55;
+    auc_i2c_write_buf[1] = 0xaa;
+    do
+    {
+        i ++;
+        i_ret = i2c_write_interface(I2C_CTPM_ADDRESS, auc_i2c_write_buf, 2);
+        fts_debug("i=%d ",i);
+        delay_qt_ms(5); //25
+    }while(i_ret <= 0 && i < 10 );
+
+	fts_debug("\ni=%d\n",i);
+
+    if (i > 1)
+    {
+        i_is_new_protocol = 1;
+    }
+	msleep(1);
+    /*********Step 3:check READ-ID***********************/        
+    cmd_write(0x90,0x00,0x00,0x00,4);
+    byte_read(reg_val,2);
+  //  #if defined (TYQ_TBW5925_SUPPORT)
+    if (((reg_val[0] == 0x79) && (reg_val[1] == 0x7 ||reg_val[1] == 0x3 || reg_val[1] == 0x11)) || ((reg_val[0] == 0x79) && (reg_val[1] == 0x8)))
+   // #else
+  //  if (reg_val[0] == 0x79 && reg_val[1] == 0x3)
+   // #endif
+    {
+    	if((reg_val[0] == 0x79) && (reg_val[1] == 0x11))
+			readid = 1;
+    	printk("[TSP] Step 3: CTPM ID,ID1 = 0x%x,ID2 = 0x%x\n",reg_val[0],reg_val[1]);
+        fts_debug("[TSP] Step 3: CTPM ID,ID1 = 0x%x,ID2 = 0x%x\n",reg_val[0],reg_val[1]);
+    }
+    else
+    {
+    	/*printk("error:ERR_READID,0x%x,0x%x,%d\n",reg_val[0],reg_val[1],__LINE__);
+        return ERR_READID;
+	*/
+if (jj < 43)
+        {
+             jj ++;
+		printk("***************jj=%d**************\n",jj);
+             msleep(200);
+             goto UPG_START; 
+        }
+        else
+        {
+		printk("error:ERR_READID,0x%x,0x%x,%d\n",reg_val[0],reg_val[1],__LINE__);
+            return ERR_READID;
+        }
+/////////////////////////////////////////
+        //i_is_new_protocol = 1;
+    }
+
+	auc_i2c_write_buf[0] = 0xcd;
+	i2c_write_interface(I2C_CTPM_ADDRESS, auc_i2c_write_buf, 1);
+	  byte_read(reg_val,1);
+	//ft5x0x_i2c_Read(client, auc_i2c_write_buf, 1, reg_val, 1);
+
+	/*********0705 mshl ********************/
+	/*if (reg_val[0] > 4)
+		is_5336_new_bootloader = 1;*/
+
+	if (reg_val[0] <= 4)
+	{
+		is_5336_new_bootloader = BL_VERSION_LZ4 ;
+	}
+	else if(reg_val[0] == 7)
+	{
+		is_5336_new_bootloader = BL_VERSION_Z7 ;
+	}
+	else if(reg_val[0] >= 0x0f)
+	{
+		is_5336_new_bootloader = BL_VERSION_GZF ;
+	}
+
+	printk("****reg_val[0] =%d,is_5336_new_bootloader =%d*****is_5336_fwsize_30=%d**********\n",reg_val[0],is_5336_new_bootloader,is_5336_fwsize_30);
+     /*********Step 4:erase app*******************************/
+    if (is_5336_fwsize_30 && (readid ==1))
+    {
+      // auc_i2c_write_buf[0] = 0x61;
+		//ft5x0x_i2c_Write(client, auc_i2c_write_buf, 1); /*erase app area*/	
+		 cmd_write(0x61,0x00,0x00,0x00,1);
+   		 msleep(1500); 
+
+		// auc_i2c_write_buf[0] = 0x63;
+		//ft5x0x_i2c_Write(client, auc_i2c_write_buf, 1); /*erase app area*/
+		cmd_write(0x63,0x00,0x00,0x00,1);
+   		 msleep(50);
+    }
+    else
+    {
+        cmd_write(0x61,0x00,0x00,0x00,1);
+	 delay_qt_ms(2000);
+    }
+    //delay_qt_ms(1500);
+   
+    fts_debug("[TSP] Step 4: erase. \n");
+    fts_debug("[TSP] TY_FTS_PACKET_LENGTH = %d\n", TY_FTS_PACKET_LENGTH);
+
+    /*********Step 5:write firmware(FW) to ctpm flash*********/
+    bt_ecc = 0;
+    fts_debug("[TSP] Step 5: start upgrade. \n");
+  if(readid == 0 || is_5336_new_bootloader == BL_VERSION_LZ4 || is_5336_new_bootloader == BL_VERSION_Z7 )
+  {
+   	 dw_lenth = dw_lenth - 8;
+  }
+  else if(is_5336_new_bootloader == BL_VERSION_GZF) dw_lenth = dw_lenth - 14;
+  
+    packet_number = (dw_lenth) / TY_FTS_PACKET_LENGTH;
+    packet_buf[0] = 0xbf;
+    packet_buf[1] = 0x00;
+    for (j=0;j<packet_number;j++)
+    {
+        temp = j * TY_FTS_PACKET_LENGTH;
+        packet_buf[2] = (FTS_BYTE)(temp>>8);
+        packet_buf[3] = (FTS_BYTE)temp;
+        lenght = TY_FTS_PACKET_LENGTH;
+        packet_buf[4] = (FTS_BYTE)(lenght>>8);
+        packet_buf[5] = (FTS_BYTE)lenght;
+
+        for (i=0;i<TY_FTS_PACKET_LENGTH;i++)
+        {
+            packet_buf[6+i] = pbt_buf[j*TY_FTS_PACKET_LENGTH + i]; 
+            bt_ecc ^= packet_buf[6+i];
+        }
+        
+        byte_write(&packet_buf[0],TY_FTS_PACKET_LENGTH + 6);
+        delay_qt_ms(TY_FTS_PACKET_LENGTH/6 + 8);
+        if ((j * TY_FTS_PACKET_LENGTH % 1024) == 0)
+        {
+              fts_debug("[TSP] upgrade the 0x%x th byte.\n", ((unsigned int)j) * TY_FTS_PACKET_LENGTH);
+        }
+    }
+
+    if ((dw_lenth) % TY_FTS_PACKET_LENGTH > 0)
+    {
+        temp = packet_number * TY_FTS_PACKET_LENGTH;
+        packet_buf[2] = (FTS_BYTE)(temp>>8);
+        packet_buf[3] = (FTS_BYTE)temp;
+
+        temp = (dw_lenth) % TY_FTS_PACKET_LENGTH;
+        packet_buf[4] = (FTS_BYTE)(temp>>8);
+        packet_buf[5] = (FTS_BYTE)temp;
+
+        for (i=0;i<temp;i++)
+        {
+            packet_buf[6+i] = pbt_buf[ packet_number*TY_FTS_PACKET_LENGTH + i]; 
+            bt_ecc ^= packet_buf[6+i];
+        }
+
+        byte_write(&packet_buf[0],temp+6);    
+        delay_qt_ms(20);
+    }
+
+    //send the last six byte
+    if(readid == 0 || is_5336_new_bootloader == BL_VERSION_LZ4 || is_5336_new_bootloader == BL_VERSION_Z7 )
+	{
+    for (i = 0; i<6; i++)
+    {
+    	if(readid &&( is_5336_new_bootloader  == BL_VERSION_Z7))
+		 temp = 0x7bfa + i;
+	else if(readid ==0 || is_5336_new_bootloader == BL_VERSION_LZ4)
+        	temp = 0x6ffa + i;
+	
+        packet_buf[2] = (FTS_BYTE)(temp>>8);
+        packet_buf[3] = (FTS_BYTE)temp;
+        temp =1;
+        packet_buf[4] = (FTS_BYTE)(temp>>8);
+        packet_buf[5] = (FTS_BYTE)temp;
+        packet_buf[6] = pbt_buf[ dw_lenth + i]; 
+        bt_ecc ^= packet_buf[6];
+
+        byte_write(&packet_buf[0],7);  
+        delay_qt_ms(20);
+    }
+    }
+	else if(is_5336_new_bootloader == BL_VERSION_GZF)
+	{
+		for (i = 0; i<12; i++)
+		{
+			if (is_5336_fwsize_30 && readid) 
+			{
+				temp = 0x7ff4 + i;
+			}
+			else if (readid) 
+			{
+				temp = 0x7bf4 + i;
+			}
+			packet_buf[2] = (u8)(temp>>8);
+			packet_buf[3] = (u8)temp;
+			temp =1;
+			packet_buf[4] = (u8)(temp>>8);
+			packet_buf[5] = (u8)temp;
+			packet_buf[6] = pbt_buf[ dw_lenth + i]; 
+			bt_ecc ^= packet_buf[6];
+  			 byte_write(&packet_buf[0],7);  
+			//ft5x0x_i2c_Write(client, packet_buf, 7);
+			msleep(10);
+
+		}
+	}
+    /*********Step 6: read out checksum***********************/
+    /*send the opration head*/
+    cmd_write(0xcc,0x00,0x00,0x00,1);
+    byte_read(reg_val,1);
+    fts_debug("[TSP] Step 6:  ecc read 0x%x, new firmware 0x%x. \n", reg_val[0], bt_ecc);
+    if(reg_val[0] != bt_ecc)
+    {
+        return ERR_ECC;
+    }
+
+    /*********Step 7: reset the new FW***********************/
+    cmd_write(0x07,0x00,0x00,0x00,1);
+
+	//added by wuz
+	delay_qt_ms(300);
+	fts_Upgraded();
+	//
+    return ERR_OK;
+}
+
+/**********************************************************
+*CTPM_FW:firmware file,the size less often 26k byte
+***********************************************************/
+static int fts_ctpm_fw_upgrade_with_i_file(unsigned char* CTPM_FW,int len)
+//int fts_ctpm_fw_upgrade_with_i_file()
+{
+   FTS_BYTE*     pbt_buf = FTS_NULL;
+   int i_ret;
+   g_u8UpgradeFWResult = 0;
+   
+    //=========FW upgrade========================*/
+   pbt_buf = CTPM_FW;
+   /*call the upgrade function*/
+   i_ret =  fts_ctpm_fw_upgrade(pbt_buf,len);
+   g_u8UpgradeFWResult = i_ret;
+   if (i_ret != 0)
+   {
+       //error handling ...
+       //TBD
+       printk("upgrade the tp firmware failed.\n");
+   }
+
+   return i_ret;
+}
+#if 0
+static int fts_ctpm_fw_upgrade_inline(void)
+{
+   FTS_BYTE*     pbt_buf = FTS_NULL;
+   int i_ret;
+   g_u8UpgradeFWResult = 0;
+   
+    //=========FW upgrade========================*/
+   pbt_buf = CTPM_FW_FILE;
+   printk("%s:enter,0x%x \n",__func__,*pbt_buf); //wang_gj add *
+   /*call the upgrade function*/
+   i_ret =  fts_ctpm_fw_upgrade(pbt_buf,sizeof(CTPM_FW_FILE));
+   g_u8UpgradeFWResult = i_ret;
+   if (i_ret != 0)
+   {
+       //error handling ...
+       //TBD
+       printk("upgrade the tp firmware failed.\n");
+   }
+
+   return i_ret;
+}
+
+static unsigned char fts_ctpm_get_upg_ver(void)
+{
+    unsigned int ui_sz;
+    ui_sz = sizeof(CTPM_FW_FILE);
+    if (ui_sz > 2)
+    {
+        return CTPM_FW_FILE[ui_sz - 2];
+    }
+    else
+    {
+        //TBD, error handling?
+        return 0xff; //default value
+    }
+}
+#endif
+
+/*
+* registry the touch as the char device
+*/
+#define	NV_TOUCH_FT
+
+//Tianyu ADD
+#define	TYN_TOUCH_FMUPGRADE 0x6501
+#define	TYN_TOUCH_FWVER     (TYN_TOUCH_FMUPGRADE +1 )
+#define   TYN_TOUCH_VENDOR   (TYN_TOUCH_FMUPGRADE +2 )
+#define TYN_TOUCH_IC_TYPE	(TYN_TOUCH_FMUPGRADE +5)
+
+//tp vendor
+#define TYN_TOUCH_FOCALTECH    1
+#define TYN_TOUCH_ILITEK	   2
+//tp ic type
+#define MSTAR_TP_ID	1
+#define CYTTSP_TP_ID	0
+#define FTS_TP_ID	2//wang_gj
+#define MSG_TP_ID	3 
+#define GOODIX_TP_ID	4
+
+static struct touch_ctrl_dev
+{
+  dev_t devno;
+  struct cdev cdev;
+  struct class *class;
+}ty_touch_ctrl;
+
+static int touch_ctrl_open(struct inode *inode, struct file *filp) 
+{ 
+  printk("%s\n", __func__); 
+  return 0;   
+} 
+ 
+static ssize_t touch_ctrl_write(struct file *filp, const char *buf, size_t count, loff_t *f_pos) 
+{		  
+  printk("%s, calibration %s %d\n", __func__, buf, count);	
+  
+  //NvOdmTouchSetAutoCalibration(touch_context->hTouchDevice, FTS_TRUE);
+  return 0;
+} 
+static ssize_t touch_ctrl_read (struct file *file, char *buf, size_t count, loff_t *offset)
+{
+  printk("touch_ctrl_read calibration\n"); 
+  return 0; 
+}
+
+//int (*ioctl) (struct inode *, struct file *, unsigned int, unsigned long);
+//struct serial_struct __user *
+
+static int fts_GetFWVer(unsigned long * pu32)
+{
+	
+	int ret;
+	if((NULL == g_stpTouchData) || (NULL == pu32))
+	{
+		printk("%s:g_stpTouchData is null.\n",__func__);
+		return 0;
+	}
+	
+	msleep(50);
+	ret = fts_i2c_read(g_stpTouchData, 0xA6, (u8*)pu32, 1);//wang_gj add u8*
+	if(ret< 0)
+	{
+		printk("%s:i2c error.\n",__func__);
+		return ret;
+	}
+	msleep(50);
+
+	printk("%s:ver=0x%x.\n",__func__,(unsigned int)(*pu32));//wang_gj modify
+	
+	return 1;
+
+}
+
+unsigned char FTS_CTPM_GetVendorID_info(unsigned char* ptr_vendor_id)
+{
+	 FTS_BYTE reg_val[2] = {0};
+		FTS_DWRD i = 0;
+		FTS_BYTE  auc_i2c_write_buf[10];
+		int 	 i_is_new_protocol = 0;
+		int 	 i_ret;
+	unsigned char au_delay_timing[44] = {30, 33, 36, 39, 42, 45, 27, 24,21,18,15,20,21,22,23,25,26,28,29,
+									31,32,34,35,37,38,40,10,11,12,13,14,16,17,18,19,1,2,3,4,5,6,7,8,9};
+	unsigned char jj = 0;
+		fts_debug("[TSP] :enter %s\n",__func__);
+	UPG_START:
+		
+	/*********Step 1:HardReset	CTPM wang_gj  add begin*****/
+		gpio_direction_output(16, 0);
+		delay_qt_ms(50);
+		gpio_direction_output(16, 1);
+	/*********Step 1:HardReset	CTPM wang_gj  add end*****/
+		delay_qt_ms(au_delay_timing[jj]);
+	
+	/////////////////////////////////////////
+		/*********Step 2:Enter upgrade mode *****/
+		auc_i2c_write_buf[0] = 0x55;
+		auc_i2c_write_buf[1] = 0xaa;
+		do
+		{
+			i ++;
+			i_ret = i2c_write_interface(I2C_CTPM_ADDRESS, auc_i2c_write_buf, 2);
+			fts_debug("i=%d ",i);
+			delay_qt_ms(5); //25
+		}while(i_ret <= 0 && i < 10 );
+	
+		fts_debug("\ni=%d\n",i);
+	
+		if (i > 1)
+		{
+			i_is_new_protocol = 1;
+		}
+	
+		/*********Step 3:check READ-ID***********************/		  
+		cmd_write(0x90,0x00,0x00,0x00,4);
+		byte_read(reg_val,2);
+	  //  #if defined (TYQ_TBW5925_SUPPORT)
+		if (((reg_val[0] == 0x79) && (reg_val[1] == 0x7 ||reg_val[1] == 0x3))||((reg_val[0] == 0x79) && (reg_val[1] == 0x8)) || ((reg_val[0] == 0x79) && (reg_val[1] == 0x11)))
+	   // #else
+	  //  if (reg_val[0] == 0x79 && reg_val[1] == 0x3)
+	   // #endif
+		{
+			fts_debug("[TSP] Step 3: CTPM ID,ID1 = 0x%x,ID2 = 0x%x\n",reg_val[0],reg_val[1]);
+		}
+		else
+		{
+			/*printk("error:ERR_READID,0x%x,0x%x,%d\n",reg_val[0],reg_val[1],__LINE__);
+			return ERR_READID;
+		*/
+	//////////////////////////////////////////
+	if (jj < 43)
+			{
+				 jj ++;
+			printk("***************jj=%d**************\n",jj);
+			printk("error:ERR_READID,0x%x,0x%x,%d\n",reg_val[0],reg_val[1],__LINE__);
+				 msleep(200);
+				 goto UPG_START; 
+			}
+			else
+			{
+			printk("error:ERR_READID,0x%x,0x%x,%d\n",reg_val[0],reg_val[1],__LINE__);
+				return ERR_READID;
+			}
+	/////////////////////////////////////////
+			//i_is_new_protocol = 1;
+		}
+		fts_i2c_read(g_stpTouchData, 0xcd, reg_val, 1);
+		printk("bootloader version =0x%x\n",reg_val[0]);
+		if(reg_val[1] == 0x11)                    //ft5336 readid : 0x79,0x11 
+			cmd_write(0x03,0x00,0x07,0xb4,4);
+		else
+			cmd_write(0x03,0x00,0x78,0x04,4);
+		byte_read(ptr_vendor_id,1);
+		auc_i2c_write_buf[0]=0x07;
+		byte_write(auc_i2c_write_buf,1);
+		msleep(300);
+		return 0;
+
+}
+static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long arg)
+{
+	struct ty_touch_fmupgrade_S  bufarg;
+	int iret;
+	unsigned char *pBuf;
+	u8 bRet = 0;
+	unsigned long  ulVer;
+	u8 vendor = 0;
+	//unsigned long i;
+	if (down_interruptible(&upgrade_lock)) {
+		printk("obtain upgrade_lock faild!\n ");
+		return  -EFAULT;
+	}
+	printk("**********************entery touch_ctrl_ioctl****************************\n");
+	if (0 == arg)
+	{
+		printk("%s:arg null pointer.\n",__func__);
+		up(&upgrade_lock);
+		return -EFAULT;
+	}
+	
+	if (copy_from_user(&bufarg, (void *) arg, sizeof(bufarg))) 
+	{
+		printk("%s:null pointer.\n",__func__);
+		up(&upgrade_lock);
+		return -EFAULT;
+	}
+
+	printk("%s:cmd=0x%x.\n",__func__,cmd);
+	
+	switch (cmd) 
+	{
+		case TYN_TOUCH_FWVER:
+			printk("%s:getver.\n",__func__);
+			if (NULL == bufarg.bufAddr)
+			{
+				printk("%s:bufAddr null pointer.\n",__func__);
+				up(&upgrade_lock);
+				return -EFAULT;
+			}
+			printk("%s:getver 1.\n",__func__);
+			
+			if ((0>= bufarg.bufLength )||( sizeof(unsigned long) < bufarg.bufLength ))
+			{
+				printk("%s:bufLength null pointer.\n",__func__);
+				up(&upgrade_lock);
+				return -EFAULT;
+			}			
+			//printk("%s:lenth=%x,addr=0x%x\n",__func__,(unsigned int)bufarg.bufLength,(bufarg.bufAddr));
+			printk("%s:getver 2\n",__func__);
+			
+			pBuf = kzalloc(bufarg.bufLength, GFP_KERNEL);
+			if (0 == pBuf)
+			{
+				printk("%s:alloc buffer failed.\n",__func__);
+				up(&upgrade_lock);
+				return 0;
+			}
+
+			if (copy_from_user(pBuf, (void *)bufarg.bufAddr, bufarg.bufLength)) 
+			{
+				printk("%s:get buffer error.\n",__func__);
+				up(&upgrade_lock);
+				return -EFAULT;
+			}
+			printk("%s:getver 3.\n",__func__);
+
+			
+			ulVer = 0;
+			
+			//get firmware version
+	#if defined(NV_TOUCH_FT)
+			bRet = fts_GetFWVer(&ulVer);
+			if(0 > bRet) 
+			{
+				*(unsigned long*)bufarg.bufAddr = 0;
+				printk("%s:FT_GetFWVer failed. \n",__func__);
+				kfree(pBuf);
+				up(&upgrade_lock);
+				return -EFAULT;
+			}
+			
+	#endif
+			if(ulVer==0)
+			{
+				printk("*******tp firmware maby be damaged*******\n");
+				ulVer = ulVer+0xA6;
+			}
+			*(( unsigned long *)bufarg.bufAddr) = ulVer;
+			
+			//printk("%s:ver=0x%x \n",__func__,*(unsigned long*)bufarg.bufAddr);
+			if( pBuf ) kfree(pBuf);
+			
+			break;
+		case TYN_TOUCH_IC_TYPE:
+			printk("%s:getver.\n",__func__);
+			if (NULL == bufarg.bufAddr)
+			{
+				printk("%s:bufAddr null pointer.\n",__func__);
+				up(&upgrade_lock);
+				return -EFAULT;
+			}
+			printk("%s:getver 1.\n",__func__);
+			
+			if ((0>= bufarg.bufLength )||( sizeof(unsigned long) < bufarg.bufLength ))
+			{
+				printk("%s:bufLength null pointer.\n",__func__);
+				up(&upgrade_lock);
+				return -EFAULT;
+			}			
+			//printk("%s:lenth=%x,addr=0x%x\n",__func__,(unsigned int)bufarg.bufLength,(bufarg.bufAddr));
+			printk("%s:get tp ic type 2\n",__func__);
+			
+			pBuf = kzalloc(bufarg.bufLength, GFP_KERNEL);
+			if (0 == pBuf)
+			{
+				printk("%s:alloc buffer failed.\n",__func__);
+				up(&upgrade_lock);
+				return 0;
+			}
+
+			if (copy_from_user(pBuf, (void *)bufarg.bufAddr, bufarg.bufLength)) 
+			{
+				printk("%s:get buffer error.\n",__func__);
+				up(&upgrade_lock);
+				return -EFAULT;
+			}
+
+			*(( unsigned long *)bufarg.bufAddr) = FTS_TP_ID;
+			
+			//printk("%s:ver=0x%x \n",__func__,*(unsigned long*)bufarg.bufAddr);
+			if( pBuf ) kfree(pBuf);
+			
+			break;
+		
+		case TYN_TOUCH_FMUPGRADE:
+			fts_GetFWVer(&ulVer);
+			printk("old tp_version = 0x%x\n",(u8)ulVer);
+			if (0 == bufarg.bufAddr)
+			{
+				printk("%s:null pointer.\n",__func__);
+				up(&upgrade_lock);
+				return 0;
+			}
+			
+			pBuf = kzalloc(bufarg.bufLength, GFP_KERNEL);
+			if (0 == pBuf)
+			{
+				printk("%s:alloc buffer failed.\n",__func__);
+				up(&upgrade_lock);
+				return 0;
+			}
+			
+			if (copy_from_user(pBuf, (void *) bufarg.bufAddr, bufarg.bufLength)) 
+			{
+				printk("%s:get buffer error.\n",__func__);
+				up(&upgrade_lock);
+				return -EAGAIN;
+			}
+
+			//get crc and check crc 	  
+			//
+			
+			//printk("%s:type=0x%x,len=0x%x \n",__func__,bufarg.touchType,bufarg.bufLength);
+			//printk("ver=0x%x,0x%x,0x%x \n",pBuf[bufarg.bufLength-3],pBuf[bufarg.bufLength-2],pBuf[bufarg.bufLength-1]);
+			
+     #if defined(NV_TOUCH_FT)
+			if( TYN_TOUCH_FOCALTECH == bufarg.touchType)
+			{
+				#ifdef CONFIG_SUPPORT_FTS_CTP_UPG
+					is_upgrading = 1;
+				#endif
+				iret = fts_ctpm_fw_upgrade_with_i_file(pBuf,bufarg.bufLength);
+				#ifdef CONFIG_SUPPORT_FTS_CTP_UPG
+					is_upgrading = 0;
+				#endif
+				if(iret)
+				{
+					printk("update focaltech firmware failed.\n");
+				}
+				kfree(pBuf);
+				fts_ctpm_auto_clb(g_stpTouchData);
+				fts_GetFWVer(&ulVer);
+				printk("current tp_version = 0x%x\n",(u8)ulVer);
+				up(&upgrade_lock);
+				return iret;
+			}
+			
+    #endif
+			if( pBuf ) kfree(pBuf);
+			break;
+		case TYN_TOUCH_VENDOR:
+			msleep(200);
+			ty_ft5x0x_read_reg(g_stpTouchData,0xa8,&vendor);
+			if(vendor == 0xa8 || vendor ==0)
+			{
+				FTS_CTPM_GetVendorID_info(&vendor);
+			}
+			printk("pengwei test touch vendor id is %d",vendor);
+			if(vendor==TRUlY_VENDOR_ID_NO)
+			{
+				if(copy_to_user(bufarg.bufAddr,TRUlY_VENDOR_ID_STR,strlen(TRUlY_VENDOR_ID_STR)))
+				{
+					printk("%s:get tp_vendor info err!\n",__func__);
+				}
+			}
+			else if(vendor==TRUlY_VENDOR_ID_NO_2)
+			{
+				if(copy_to_user(bufarg.bufAddr,TRUlY_VENDOR_ID_STR_2,strlen(TRUlY_VENDOR_ID_STR_2)))
+				{
+					printk("%s:get tp_vendor info err!\n",__func__);
+				}
+			}
+			else if(vendor==BYD_VENDOR_ID_NO)
+			{
+				if(copy_to_user(bufarg.bufAddr,BYD_VENDOR_ID_STR,strlen(BYD_VENDOR_ID_STR)))
+				{
+					printk("%s:get tp_vendor info err!\n",__func__);
+				}
+			}
+			else if(vendor==O_FILM_VENDOR_ID_NO)
+			{
+				if(copy_to_user(bufarg.bufAddr,O_FILM_VENDOR_ID_STR,strlen(O_FILM_VENDOR_ID_STR)))
+				{
+					printk("%s:get tp_vendor info err!\n",__func__);
+				}
+			}
+			else if(vendor==O_FILM_VENDOR_ID_NO_2)
+			{
+				if(copy_to_user(bufarg.bufAddr,O_FILM_VENDOR_ID_STR_2,strlen(O_FILM_VENDOR_ID_STR_2)))
+				{
+					printk("%s:get tp_vendor info err!\n",__func__);
+				}
+			}
+			else if(vendor==BM_VENDOR_ID_NO)
+			{
+				if(copy_to_user(bufarg.bufAddr,BM_VENDOR_ID_STR,strlen(BM_VENDOR_ID_STR)))
+				{
+					printk("%s:get tp_vendor info err!\n",__func__);
+				}
+			}
+			else if(vendor==LCE_VENDOR_ID_NO)
+			{
+				if(copy_to_user(bufarg.bufAddr,LCE_VENDOR_ID_STR,strlen(LCE_VENDOR_ID_STR)))
+				{
+					printk("%s:get tp_vendor info err!\n",__func__);
+				}
+			}
+			else
+			{
+				if(copy_to_user(bufarg.bufAddr,"unknown_tp",strlen("unknown_tp")))
+				{
+					printk("%s:get tp_vendor info err!\n",__func__);
+				}
+			}
+			break;
+		default:
+			printk("%s:Invalid command.\n",__func__);
+	}
+	up(&upgrade_lock);
+	return 0;
+}
+
+static int touch_ctrl_close(struct inode *inode, struct file *filp) 
+{ 
+  printk("%s\n", __func__); 
+  return 0; 
+} 
+
+struct file_operations ty_touch_ctrl_fops = 
+{ 
+	.write = touch_ctrl_write,
+	.read = touch_ctrl_read, 
+	.open = touch_ctrl_open, 
+	.release = touch_ctrl_close, 
+	.unlocked_ioctl	 = touch_ctrl_ioctl,//wang_gj
+}; 
+
+static int touch_ctrl_init(void *touch) 
+{ 
+  int ret = 0; 
+  struct device *fts_chr_device;
+
+  ret = alloc_chrdev_region(&ty_touch_ctrl.devno, 0, 1, "touch_ctrl"); 
+  if(ret)
+  { 
+	printk("%s, can't alloc chrdev\n", __func__); 
+  } 
+  printk("%s, register chrdev(%d, %d)\n", __func__, MAJOR(ty_touch_ctrl.devno), MINOR(ty_touch_ctrl.devno)); 
+		 
+  cdev_init(&ty_touch_ctrl.cdev, &ty_touch_ctrl_fops);
+ 
+  ty_touch_ctrl.cdev.owner = THIS_MODULE; 
+  ty_touch_ctrl.cdev.ops = &ty_touch_ctrl_fops;
+  
+  ret = cdev_add(&ty_touch_ctrl.cdev, ty_touch_ctrl.devno, 1); 
+  if(ret < 0)
+  { 
+	printk("%s, add char devive error, ret %d\n", __func__, ret); 
+  } 
+
+  ty_touch_ctrl.class = class_create(THIS_MODULE, "fts_touch_ctrl"); 
+  if(IS_ERR(ty_touch_ctrl.class)){ 
+	printk("%s, creating class error\n", __func__); 
+  } 
+
+  fts_chr_device=device_create(ty_touch_ctrl.class, NULL, ty_touch_ctrl.devno, NULL, "fts_fw_entry");
+  if(NULL == fts_chr_device){
+	printk("%s, create device, error\n", __func__);
+	class_destroy(ty_touch_ctrl.class);
+  }
+
+  return (int)touch; 
+} 
+
+#endif
 static int __init ft5x06_ts_init(void)
 {
 	return i2c_add_driver(&ft5x06_ts_driver);
