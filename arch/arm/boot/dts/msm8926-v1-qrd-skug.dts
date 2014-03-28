@@ -19,4 +19,54 @@
 	compatible = "qcom,msm8926-qrd", "qcom,msm8926", "qcom,qrd";
 	qcom,board-id = <11 5>;
 };
+/*xiangdong add for nfc begin*/
+&soc {
+	i2c@f9925000 { /* BLSP1 QUP3 */
+		cell-index = <2>;
+		compatible = "qcom,i2c-qup";
+		reg = <0xf9925000 0x1000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg-names = "qup_phys_addr";
+		interrupts = <0 97 0>;
+		interrupt-names = "qup_err_intr";
+		qcom,i2c-bus-freq = <400000>;
+		qcom,i2c-src-freq = <19200000>;
+		qcom,sda-gpio = <&msmgpio 10 0>;
+		qcom,scl-gpio = <&msmgpio 11 0>;
+		qcom,master-id = <86>;
 
+		nfc-bcm@77 {
+			compatible = "qcom,nfc-bcm";
+			reg = <0x77>;
+			qcom,irq-gpio = <&msmgpio 21 0x00>;
+			qcom,en-gpio = <&msmgpio 20 0x00>;
+			qcom,wake-gpio = <&pm8226_gpios 2 0>;
+			qcom,clk-src = "BBCLK2";
+			interrupt-parent = <&msmgpio>;
+			interrupts = <21 0>;
+			vdd-nfc-supply = <&pm8226_l6>;
+			qcom,clk-gpio = <&pm8226_gpios 3 0>;
+		};
+	};
+};
+&pm8226_gpios {
+	gpio@c100 { /* GPIO 2 */
+		qcom,mode = <1>;		/* Digital output */
+		qcom,output-type = <0>;		/* CMOS logic */
+		qcom,pull = <5>;		/* QPNP_PIN_PULL_NO*/
+		qcom,vin-sel = <3>;		/* QPNP_PIN_VIN3 */
+		qcom,out-strength = <3>;	/* QPNP_PIN_OUT_STRENGTH_HIGH */
+		qcom,src-sel = <2>;		/* QPNP_PIN_SEL_FUNC_1 */
+		qcom,master-en = <1>;		/* Enable GPIO */
+	};
+
+	gpio@c200 { /* GPIO 3 */
+		qcom,mode = <0>;		/* QPNP_PIN_MODE_DIG_IN */
+		qcom,pull = <5>;		/* QPNP_PIN_PULL_NO */
+		qcom,vin-sel = <2>;		/* QPNP_PIN_VIN2 */
+		qcom,src-sel = <2>;		/* QPNP_PIN_SEL_FUNC_1 */
+		qcom,master-en = <1>;
+	};
+};
+/*xiangdong add for nfc end*/
