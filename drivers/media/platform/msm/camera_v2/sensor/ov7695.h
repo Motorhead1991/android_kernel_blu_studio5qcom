@@ -1,0 +1,125 @@
+
+#if 0
+#define CAMERA_MIN_BRIGHTNESS  0
+#define CAMERA_DEF_BRIGHTNESS  3
+#define CAMERA_MAX_BRIGHTNESS  6
+#define CAMERA_BRIGHTNESS_STEP 1
+
+#define CAMERA_MIN_CONTRAST    0
+#define CAMERA_DEF_CONTRAST    5
+#define CAMERA_MAX_CONTRAST    10
+#define CAMERA_CONTRAST_STEP   1
+
+#define CAMERA_MIN_SCE_FACTOR    -100
+#define CAMERA_DEF_SCE_FACTOR    0
+#define CAMERA_MAX_SCE_FACTOR    100
+
+/* No saturation for default */
+#define CAMERA_MIN_SATURATION  0
+#define CAMERA_DEF_SATURATION  5
+#define CAMERA_MAX_SATURATION  10
+#define CAMERA_SATURATION_STEP 1
+
+/* No hue for default. */
+#define CAMERA_MIN_HUE         0
+#define CAMERA_DEF_HUE         0
+#define CAMERA_MAX_HUE         300
+#define CAMERA_HUE_STEP        60
+
+/* No sharpness for default */
+#define CAMERA_MIN_SHARPNESS   0
+#define CAMERA_DEF_SHARPNESS   10
+#define CAMERA_MAX_SHARPNESS   30
+#define CAMERA_SHARPNESS_STEP  5
+
+#define CAMERA_MIN_ZOOM  0
+#define CAMERA_DEF_ZOOM  0
+#define CAMERA_MAX_ZOOM  0x31
+#define CAMERA_ZOOM_STEP 0x3
+#endif
+#if 0
+enum v4l2_iso_mode {
+	ISO_AUTO = 0,
+	ISO_100,
+	ISO_200,
+	ISO_400,
+	ISO_800,
+	ISO_MAX,
+};
+#endif
+enum v4l2_exposure_mode {
+	EXPOSURE_L2 = -12,
+	EXPOSURE_L1 = -6,
+	EXPOSURE_H0 = 0,
+	EXPOSURE_H1 = 6,
+	EXPOSURE_H2 = 12,
+	EXPOSURE_MAX,
+};
+
+enum v4l2_contrast_mode {
+	CONTRAST_0 = 0,
+	CONTRAST_1 ,
+	CONTRAST_2 ,
+	CONTRAST_3 ,
+	CONTRAST_4 ,
+	CONTRAST_5 ,
+	CONTRAST_6 ,
+	CONTRAST_7 ,
+	CONTRAST_8 ,
+	CONTRAST_9 ,
+	CONTRAST_10 ,
+	CONTRAST_MAX,
+};
+
+enum v4l2_saturation_mode {
+	SATURATION_0 = 0,
+	SATURATION_1 ,
+	SATURATION_2 ,
+	SATURATION_3 ,
+	SATURATION_4 ,
+	SATURATION_5 ,
+	SATURATION_6 ,
+	SATURATION_7 ,
+	SATURATION_8 ,
+	SATURATION_9 ,
+	SATURATION_10 ,
+	SATURATION_MAX,
+};
+#if 0
+enum v4l2_sharpness_mode {
+	SHARPNESS_L2 = 0,
+	SHARPNESS_L1 = 5,
+	SHARPNESS_H0 = 10,
+	SHARPNESS_H1 = ,
+	SHARPNESS_H2 = 30,
+	SHARPNESS_MAX,
+};
+enum v4l2_brightness_mode {
+	BRIGHTNESS_L3 = 0,
+	BRIGHTNESS_L2,
+	BRIGHTNESS_L1,
+	BRIGHTNESS_H0,
+	BRIGHTNESS_H1,
+	BRIGHTNESS_H2,
+	BRIGHTNESS_H3,
+	BRIGHTNESS_MAX,
+};
+#endif
+enum v4l2_flicker_mode {
+	FLICKER_OFF = 0,
+	FLICKER_60Hz,
+	FLICKER_50Hz,
+	FLICKER_AUTO,
+	FLICKER_MAX,
+};
+#if 0
+enum v4l2_zoom_level {
+	ZOOM_LEVEL_0 = 0,
+	ZOOM_LEVEL_1,
+	ZOOM_LEVEL_2,
+	ZOOM_LEVEL_3,
+	ZOOM_LEVEL_4,
+	ZOOM_LEVEL_5,
+	ZOOM_LEVEL_MAX,
+};
+#endif
