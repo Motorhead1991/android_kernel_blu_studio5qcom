@@ -171,6 +171,8 @@ config OV5648_REAR
 		OmniVision 5 MP Bayer Sensor, only use 1 mipi lane,
 		preview set to 1296*972 at 30 fps,
 		snapshot set to 2592*1944 at 12 fps,
+		TY wang_gj 2014-3-30 added.
+		OmniVision 5 MP Bayer Sensor, use 4 mipi lane,
 		This sensor driver does not support auto focus.
 config OV7695
 	bool "Sensor OV7695 (BAYER 0.3M)"
