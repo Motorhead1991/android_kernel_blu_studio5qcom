@@ -19,6 +19,9 @@
 #include <mach/rpm-regulator.h>
 #include <mach/rpm-regulator-smd.h>
 #include <linux/regulator/consumer.h>
+/*TYRD wang_gj add for factory test begin*/
+#include <linux/kobject.h>
+/*TYRD wang_gj add for factory test end */
 
 /*#define CONFIG_MSMB_CAMERA_DEBUG*/
 #undef CDBG
@@ -1118,6 +1121,210 @@ static struct msm_camera_i2c_fn_t msm_sensor_qup_func_tbl = {
 		msm_camera_qup_i2c_write_table_w_microdelay,
 	.i2c_write_conf_tbl = msm_camera_qup_i2c_write_conf_tbl,
 };
+/*TYRD wang_gj add for factory test begin*/
+#define CAMERA_NAME_SIZE 32
+char back_camera_name[CAMERA_NAME_SIZE]="NULL";
+char front_camera_name[CAMERA_NAME_SIZE]="NULL";
+static char back_camera_mid[CAMERA_NAME_SIZE]="NULL";
+static char front_camera_mid[CAMERA_NAME_SIZE]="NULL";
+static  int back_camera_pixel_index=0;
+static  int front_camera_pixel_index=0;
+
+static int camera_name_sysfs_inited = 0;
+
+static ssize_t back_camera_name_class_show(struct kobject *dev, 
+		struct kobj_attribute *attr, char *buf)
+{
+	return snprintf(buf, CAMERA_NAME_SIZE, "%s", back_camera_name);
+}
+static ssize_t front_camera_name_class_show(struct kobject *dev, 
+		struct kobj_attribute *attr, char *buf)
+{
+	return snprintf(buf, CAMERA_NAME_SIZE, "%s", front_camera_name);
+}
+static ssize_t back_camera_pixel_index_show(struct kobject *dev, 
+		struct kobj_attribute *attr, char *buf)
+{
+	return snprintf(buf, 3, "%d\n", back_camera_pixel_index);
+}
+static ssize_t front_camera_pixel_index_show(struct kobject *dev, 
+		struct kobj_attribute *attr, char *buf)
+{
+	return snprintf(buf, 3, "%d\n", front_camera_pixel_index);
+}
+
+static ssize_t back_camera_module_id_store(struct kobject *d, struct kobj_attribute *attr,
+	const char *buf, size_t count)
+{
+	memcpy(back_camera_mid, buf,count);
+	 return count;
+}
+static ssize_t back_camera_module_id_show(struct kobject *d, 
+		struct kobj_attribute *attr, char *buf)
+{
+	return snprintf(buf, CAMERA_NAME_SIZE, "/dev/%s", back_camera_mid);
+
+}
+static ssize_t front_camera_module_id_store(struct kobject *d, struct kobj_attribute *attr,
+	const char *buf, size_t count)
+{
+	memcpy(front_camera_mid, buf,count);
+	 return count;
+}
+static ssize_t front_camera_module_id_show(struct kobject *d, 
+		struct kobj_attribute *attr, char *buf)
+{
+	return snprintf(buf, CAMERA_NAME_SIZE, "/dev/%s", front_camera_mid);
+
+}
+
+static struct kobj_attribute backcamera_name_attr = {
+	.attr={
+	.name = "backcamera_name",
+	.mode = S_IRWXG|S_IRWXU|S_IROTH,
+	},
+	.show = back_camera_name_class_show,
+};
+static struct kobj_attribute frontcamera_name_attr = {
+	.attr={
+	.name = "frontcamera_name",
+	.mode = S_IRWXG|S_IRWXU|S_IROTH,
+	},
+	.show = front_camera_name_class_show,
+};
+static struct kobj_attribute backcamera_pixel_index_attr = {
+	.attr={
+	.name = "backcamera_pixel_index",
+	.mode = S_IRWXG|S_IRWXU|S_IROTH,
+	},
+	.show = back_camera_pixel_index_show,
+};
+static struct kobj_attribute frontcamera_pixel_index_attr = {
+	.attr={
+	.name = "frontcamera_pixel_index",
+	.mode = S_IRWXG|S_IRWXU|S_IROTH,
+	},
+	.show = front_camera_pixel_index_show,
+};
+
+static struct kobj_attribute backcamera_module_id_attr = {
+	.attr={
+	.name = "backcamera_mid",
+	.mode = S_IRWXG|S_IRWXU|S_IROTH,
+	},
+	.show = back_camera_module_id_show,
+	.store = back_camera_module_id_store,
+};
+static struct kobj_attribute frontcamera_module_id_attr = {
+	.attr={
+	.name = "frontcamera_mid",
+	.mode = S_IRWXG|S_IRWXU|S_IROTH,
+	},
+	.show = front_camera_module_id_show,
+	.store = front_camera_module_id_store,
+};
+
+static struct attribute *camera_name_attrs[]={
+	&backcamera_name_attr.attr,
+	&frontcamera_name_attr.attr,
+	&backcamera_pixel_index_attr.attr,
+	&frontcamera_pixel_index_attr.attr,
+	&backcamera_module_id_attr.attr,
+	&frontcamera_module_id_attr.attr,
+	NULL,
+};
+static struct attribute_group camera_name_attrs_group = {
+	.attrs = camera_name_attrs,
+};
+static struct kobject *camera_name_kobj;
+/*function: set_sensor_pixel_index
+index:
+0:invalid
+1: 0.3Mp
+2: 0.9Mp
+3: 1.6Mp
+4: 2Mp
+5: 5Mp
+6: 8Mp
+7: 12Mp
+8: 13Mp
+if add anyother new sensor ,ple add the relative index
+*/
+enum sensor_pixel_index {
+PIXEL_INDEX_INVALID=0,
+PIXEL_INDEX_0_3MP,
+PIXEL_INDEX_0_9MP,
+PIXEL_INDEX_1_6MP,
+PIXEL_INDEX_2MP,
+PIXEL_INDEX_5MP,
+PIXEL_INDEX_8MP,
+PIXEL_INDEX_12MP,
+PIXEL_INDEX_13MP,
+PIXEL_INDEX_MAX,
+};
+static int32_t set_sensor_pixel_index(struct msm_sensor_ctrl_t *s_ctrl)
+{
+	int rc = PIXEL_INDEX_INVALID;
+if(s_ctrl->sensordata->sensor_info->position==BACK_CAMERA_B)
+{
+if(!strcmp(s_ctrl->sensordata->sensor_name,"ov7695")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"hi256"))
+	back_camera_pixel_index=PIXEL_INDEX_0_3MP;//0.3Mp
+else if(!strcmp(s_ctrl->sensordata->sensor_name,"mt9m114")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"sp1628")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"ov9724"))
+	back_camera_pixel_index=PIXEL_INDEX_0_9MP;//0.9Mp
+else if(!strcmp(s_ctrl->sensordata->sensor_name,"ov9760")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"ov9760_sunny_q1v04a"))
+	back_camera_pixel_index=PIXEL_INDEX_1_6MP;//1.6Mp
+else if(!strcmp(s_ctrl->sensordata->sensor_name,"ov2720")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"ov2675"))
+	back_camera_pixel_index=PIXEL_INDEX_2MP;//2Mp
+else if(!strcmp(s_ctrl->sensordata->sensor_name,"ov5648_oty5a01")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"ov5648_oty5a05")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"imx134"))
+	back_camera_pixel_index=PIXEL_INDEX_5MP;//5Mp
+else if(!strcmp(s_ctrl->sensordata->sensor_name,"ov8830_q8v09k")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"ov8865_q8v18a")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"ov8825"))
+	back_camera_pixel_index=PIXEL_INDEX_8MP;//8Mp
+else if(!strcmp(s_ctrl->sensordata->sensor_name,"skuf_ov12830_p12v01c")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"s5k3l1yx")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"imx135"))
+	back_camera_pixel_index=PIXEL_INDEX_12MP;//12Mp
+}
+else if(s_ctrl->sensordata->sensor_info->position==FRONT_CAMERA_B)
+{
+if(!strcmp(s_ctrl->sensordata->sensor_name,"ov7695")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"hi256"))
+	front_camera_pixel_index=PIXEL_INDEX_0_3MP;//0.3Mp
+else if(!strcmp(s_ctrl->sensordata->sensor_name,"mt9m114")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"sp1628")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"ov9724"))
+	front_camera_pixel_index=PIXEL_INDEX_0_9MP;//0.9Mp
+else if(!strcmp(s_ctrl->sensordata->sensor_name,"ov9760")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"ov9760_sunny_q1v04a"))
+	front_camera_pixel_index=PIXEL_INDEX_1_6MP;//1.6Mp
+else if(!strcmp(s_ctrl->sensordata->sensor_name,"ov2720")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"ov2675"))
+	front_camera_pixel_index=PIXEL_INDEX_2MP;//2Mp
+else if(!strcmp(s_ctrl->sensordata->sensor_name,"ov5648_oty5a01")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"ov5648_oty5a05")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"imx134"))
+	front_camera_pixel_index=PIXEL_INDEX_5MP;//5Mp
+else if(!strcmp(s_ctrl->sensordata->sensor_name,"ov8830_q8v09k")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"ov8865_q8v18a")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"ov8825"))
+	front_camera_pixel_index=PIXEL_INDEX_8MP;//8Mp
+else if(!strcmp(s_ctrl->sensordata->sensor_name,"skuf_ov12830_p12v01c")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"s5k3l1yx")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"imx135"))
+	front_camera_pixel_index=PIXEL_INDEX_12MP;//12Mp
+}
+	return rc;
+}
+
+/*TYRD wang_gj add for factory test end*/
 
 int32_t msm_sensor_platform_probe(struct platform_device *pdev, void *data)
 {
@@ -1188,6 +1395,18 @@ int32_t msm_sensor_platform_probe(struct platform_device *pdev, void *data)
 	snprintf(s_ctrl->msm_sd.sd.name,
 		sizeof(s_ctrl->msm_sd.sd.name), "%s",
 		s_ctrl->sensordata->sensor_name);
+/*TYRD wang_gj add for factory test begin*/
+	if(s_ctrl->sensordata->sensor_info->position==0)
+		snprintf(back_camera_name,
+		sizeof(back_camera_name), "%s\n",
+		s_ctrl->sensordata->sensor_name);
+	else
+		snprintf(front_camera_name,
+		sizeof(front_camera_name), "%s\n",
+		s_ctrl->sensordata->sensor_name);
+	set_sensor_pixel_index(s_ctrl);
+/*TYRD wang_gj add for factory test end*/
+
 	v4l2_set_subdevdata(&s_ctrl->msm_sd.sd, pdev);
 	s_ctrl->msm_sd.sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE;
 	media_entity_init(&s_ctrl->msm_sd.sd.entity, 0, NULL, 0);
@@ -1210,6 +1429,18 @@ int32_t msm_sensor_platform_probe(struct platform_device *pdev, void *data)
 
 	s_ctrl->func_tbl->sensor_power_down(s_ctrl);
 	CDBG("%s:%d\n", __func__, __LINE__);
+/*TYRD wang_gj add for factory test begin*/
+	if(!camera_name_sysfs_inited)
+		{int rc_local;
+		camera_name_kobj = kobject_create_and_add("camera_name", NULL);
+		if(camera_name_kobj)
+			rc_local = sysfs_create_group(camera_name_kobj, &camera_name_attrs_group);
+		if(!camera_name_kobj||rc_local)
+		pr_err("%s:%d failed create camera_name_kobj\n", __func__, __LINE__);
+		camera_name_sysfs_inited = 1;
+		}
+/*TYRD wang_gj add for factory test end*/
+
 	return rc;
 }
 

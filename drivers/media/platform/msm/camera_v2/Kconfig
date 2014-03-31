@@ -164,6 +164,14 @@ config OV5648
 		snapshot set to 2592*1944 at 12 fps,
 		This sensor driver does not support auto focus.
 
+config OV5648_REAR
+	bool "Sensor OV5648_REAR (BAYER 5M)"
+	depends on MSMB_CAMERA
+	---help---
+		OmniVision 5 MP Bayer Sensor, only use 1 mipi lane,
+		preview set to 1296*972 at 30 fps,
+		snapshot set to 2592*1944 at 12 fps,
+		This sensor driver does not support auto focus.
 config OV7695
 	bool "Sensor OV7695 (BAYER 0.3M)"
 	depends on MSMB_CAMERA
