@@ -45,7 +45,7 @@
 			qcom,clk-src = "BBCLK2";
 			interrupt-parent = <&msmgpio>;
 			interrupts = <21 0>;
-			vdd-nfc-supply = <&pm8226_l6>;
+			vdd_nfc-supply = <&pm8226_l6>;
 			qcom,clk-gpio = <&pm8226_gpios 3 0>;
 		};
 	};

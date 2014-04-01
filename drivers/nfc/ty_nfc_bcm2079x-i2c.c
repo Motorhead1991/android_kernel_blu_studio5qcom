@@ -110,7 +110,7 @@ struct bcm2079x_dev {
 #endif
 
 };
-#if 0 //def KT_ADAPTIVE
+#if 1 //def KT_ADAPTIVE
 static int nfcc_hw_check(struct i2c_client *client, unsigned short curr_addr);
 #endif
 
@@ -493,7 +493,7 @@ static int nfc_parse_dt(struct device *dev, struct bcm2079x_platform_data *pdata
 		return -EINVAL;
 	return r;
 }
-#if 0
+#if 1
 static int nfcc_hw_check(struct i2c_client *client, unsigned short curr_addr)
 {
 	int r = 0;
@@ -502,21 +502,28 @@ static int nfcc_hw_check(struct i2c_client *client, unsigned short curr_addr)
 	client->addr = curr_addr;
 	/* Set-up Addr 0. No data written */
 	r = i2c_master_send(client, &buf, 1);
-	if (r < 0)
+	if (r < 0){
+		dev_err(&client->dev,"nfcc_hw_check i2c_master_send fail\n");
 		goto err_presence_check;
+	}else{		
+		dev_err(&client->dev,"nfcc_hw_check i2c_master_send ok\n");
+	}
 	buf = 0;
 	/* Read back from Addr 0 */
 	r = i2c_master_recv(client, &buf, 1);
-	if (r < 0)
+	if (r < 0){		
+		dev_err(&client->dev,"nfcc_hw_check i2c_master_recv fail\n");
 		goto err_presence_check;
-
+	}else{		
+		dev_err(&client->dev,"nfcc_hw_check i2c_master_recv ok (%d)!\n", buf);
+	}
 	r = 0;
 	return r;
 
 err_presence_check:
 	r = -ENXIO;
 	dev_err(&client->dev,
-		"nfc-nci nfcc_presence check - no NFCC available\n");
+		"nfcc_hw_check - no NFCC available\n");
 	return r;
 }
 #endif
@@ -534,7 +541,7 @@ static int bcm2079x_probe(struct i2c_client *client,
 	#endif
 	struct bcm2079x_platform_data *platform_data;
 	struct bcm2079x_dev *bcm2079x_dev;
-	#if 0
+	#if 1
 	struct regulator *nfc_regulator;
 	#endif
 
@@ -662,8 +669,8 @@ static int bcm2079x_probe(struct i2c_client *client,
 		goto err_misc_register;
 	}
 	
-	#if 0
-	nfc_regulator = regulator_get(&client->dev, "vdd-nfc");
+	#if 1
+	nfc_regulator = regulator_get(&client->dev, "vdd_nfc");
 	regulator_set_voltage(nfc_regulator,1800000,1800000);
 	regulator_set_optimum_mode(nfc_regulator,154000);
 	regulator_enable(nfc_regulator);
@@ -701,7 +708,21 @@ static int bcm2079x_probe(struct i2c_client *client,
 	dev_info(&client->dev,
 		 "%s, probing bcm2079x driver exited successfully\n",
 		 __func__);
-
+	
+	#if 1//def KT_ADAPTIVE	
+	gpio_set_value(platform_data->en_gpio, 1);
+	gpio_set_value(platform_data->wake_gpio, 1);
+	r = nfcc_hw_check(client, platform_data->reg);
+	if (r) {
+		/* We don't think there is hardware but just in case HPD */
+		gpio_set_value(platform_data->en_gpio, 1);		
+		dev_err(&client->dev, "nfcc_hw_check failed\n");
+	}else{		
+		dev_err(&client->dev, "nfcc_hw_check ok\n");
+	}
+	gpio_set_value(platform_data->en_gpio, 0);
+	gpio_set_value(platform_data->wake_gpio, 0);
+	#endif
 #ifdef USE_WAKE_LOCK
 	wake_lock_init(&bcm2079x_dev->wake_lock , WAKE_LOCK_SUSPEND, "nfcwakelock" );
 #endif
