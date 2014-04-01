@@ -130,13 +130,20 @@ static int eeprom_config_read_cal_data(struct msm_eeprom_ctrl_t *e_ctrl,
 	rc = copy_to_user(cdata->cfg.read_data.dbuffer,
 		e_ctrl->cal_data.mapdata,
 		cdata->cfg.read_data.num_bytes);
-
+/*TYRD wang_gj modify at 2014-4-1 begin
+Because we need the data many times.
+So it can not be deleated
+*/
+#if 0
 	/* should only be called once.  free kernel resource */
 	if (!rc) {
 		kfree(e_ctrl->cal_data.mapdata);
 		kfree(e_ctrl->cal_data.map);
 		memset(&e_ctrl->cal_data, 0, sizeof(e_ctrl->cal_data));
 	}
+#endif
+/*TYRD wang_gj modify at 2014-4-1 end*/
+
 	return rc;
 }
 
