@@ -494,7 +494,17 @@ int msm_sensor_match_id(struct msm_sensor_ctrl_t *s_ctrl)
 		pr_err("%s: %s: read id failed\n", __func__, sensor_name);
 		return rc;
 	}
-
+	
+	/*wuchx 2013-12-4 added for sensor info begin*/
+	printk("%s:sensor name = %s, read id: %x expected id %x:\n", __func__,
+		s_ctrl->sensordata->sensor_name,chipid,
+		s_ctrl->sensordata->slave_info->sensor_id);
+	/*
+	CDBG("%s: read id: %x expected id %x:\n", __func__, chipid,
+		s_ctrl->sensordata->slave_info->sensor_id);
+	*/
+	/*wuchx 2013-12-4 added for sensor info end*/
+	
 	CDBG("%s: read id: %x expected id %x:\n", __func__, chipid,
 		slave_info->sensor_id);
 	if (chipid != slave_info->sensor_id) {
