@@ -1799,7 +1799,9 @@ enum af_camera_name {
 	ACTUATOR_MAIN_CAM_3,
 	ACTUATOR_MAIN_CAM_4,
 	ACTUATOR_MAIN_CAM_5,
+	/*gaohw add for ov13850 begin*/
 	ACTUATOR_MAIN_CAM_6,
+	/*gaohw add for ov13850 end*/
 	ACTUATOR_WEB_CAM_0,
 	ACTUATOR_WEB_CAM_1,
 	ACTUATOR_WEB_CAM_2,

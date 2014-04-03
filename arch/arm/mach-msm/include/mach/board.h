@@ -240,7 +240,9 @@ enum msm_camera_actuator_name {
 	MSM_ACTUATOR_MAIN_CAM_3,
 	MSM_ACTUATOR_MAIN_CAM_4,
 	MSM_ACTUATOR_MAIN_CAM_5,
+	/* gaohw add for ov13850 begin*/
 	MSM_ACTUATOR_MAIN_CAM_6,
+	/* gaohw add for ov13850 end*/
 	MSM_ACTUATOR_WEB_CAM_0,
 	MSM_ACTUATOR_WEB_CAM_1,
 	MSM_ACTUATOR_WEB_CAM_2,
