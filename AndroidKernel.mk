@@ -26,6 +26,11 @@ ZIMG_FILE = $(addprefix $(KERNEL_OUT)/arch/arm/boot/,$(patsubst %.dts,%-zImage,$
 KERNEL_ZIMG = $(KERNEL_OUT)/arch/arm/boot/zImage
 DTC = $(KERNEL_OUT)/scripts/dtc/dtc
 
+# tianyu lichm 20140328 add for using tianyu DTS begin
+ifeq (y,$(findstring y,$(filter TYQ_DTS_SUPPORT=%,$(TY_CP_OPTION))))
+define append-dtb
+endef
+else
 define append-dtb
 mkdir -p $(KERNEL_OUT)/arch/arm/boot;\
 $(foreach DTS_NAME, $(DTS_NAMES), \
@@ -33,6 +38,8 @@ $(foreach DTS_NAME, $(DTS_NAMES), \
       $(DTC) -p 1024 -O dtb -o $(call DTB_FILE,$(d)) $(d); \
       cat $(KERNEL_ZIMG) $(call DTB_FILE,$(d)) > $(call ZIMG_FILE,$(d));))
 endef
+endif
+# tianyu lichm 20140328 add for using tianyu DTS end
 else
 
 define append-dtb
