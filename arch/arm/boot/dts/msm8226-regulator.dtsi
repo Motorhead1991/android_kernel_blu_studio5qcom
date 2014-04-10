@@ -247,9 +247,16 @@
 		status = "okay";
 		pm8226_l5: regulator-l5 {
 			regulator-name = "8226_l5";
+			/*TY wuchx 2013-11-5 modified for DVDD 1.5V begin*/
+			/*
 			regulator-min-microvolt = <1200000>;
 			regulator-max-microvolt = <1200000>;
 			qcom,init-voltage = <1200000>;
+			*/
+			regulator-min-microvolt = <1200000>;
+			regulator-max-microvolt = <1500000>;
+			qcom,init-voltage = <1500000>;
+			/*TY wuchx 2013-11-5 modified for DVDD 1.5V end*/
 			status = "okay";
 		};
 	};

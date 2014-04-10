@@ -25,5 +25,9 @@ obj-$(CONFIG_OV5648_REAR) += ov5648_rear.o
 obj-$(CONFIG_MT9M114) += mt9m114.o
 obj-$(CONFIG_SP1628) += sp1628.o
 obj-$(CONFIG_GC0339) += gc0339.o
-#wuchx 2014-3-28 added
+#wuchx 2014-3-28 added begin
 obj-$(CONFIG_OV7695) += ov7695.o
+obj-$(CONFIG_OV9760) += ov9760.o
+obj-$(CONFIG_OV9760) += ov9760_sunny_q1v04a.o
+obj-$(CONFIG_OV2680) += ov2680.o
+#wuchx 2014-3-28 added end

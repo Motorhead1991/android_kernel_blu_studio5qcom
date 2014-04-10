@@ -146,6 +146,15 @@ config OV9724
 		hfr video at 60, 90 and 120 fps. This sensor driver does
 		not support auto focus.
 
+config OV9760
+	bool "Sensor OV9760 (BAYER 1.6M)"
+	depends on MSMB_CAMERA
+	---help---
+		OmniVision 1.6 MP Bayer Sensor, supports 2 mipi lanes,
+		preview and snapshot config at 1280*720 at 30 fps,
+		hfr video at 60, 90 and 120 fps. This sensor driver does
+		not support auto focus.
+
 config HI256
         bool "Hynix hi256 (YUV 2MP)"
         depends on MSMB_CAMERA
@@ -181,7 +190,14 @@ config OV7695
 		TY wuchx 2013-11-26 added.
 		OmniVision 0.3 MP Bayer Sensor, only use 1 mipi lane,
 		This sensor driver does not support auto focus.
-
+config OV2680
+	bool "Sensor OV2680 (BAYER 2M)"
+	depends on MSMB_CAMERA
+	---help---
+		OmniVision 2 MP Bayer Sensor, only use 1 mipi lane,
+		preview set to 800*600 at 30 fps,
+		snapshot set to 1600*1200 at 15 fps,
+		This sensor driver does not support auto focus.
 config MT9M114
 	bool "Sensor MT9M114 (YUV 1.26MP)"
 	depends on MSMB_CAMERA
