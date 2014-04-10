@@ -70,3 +70,22 @@
 	};
 };
 /*xiangdong add for nfc end*/
+/*xiangdong add for battery begin*/
+&qrd_batterydata {
+	qcom,rpull-up-kohm = <100>;
+	qcom,vref-batt-therm = <1800000>;
+
+	/include/ "batterydata-qrd-4v2-2000mah.dtsi"
+	/include/ "TY_batterydata-qrd-4v35-2200mah.dtsi"
+	/include/ "TY_batterydata-qrd-LS-4v33-2250mah.dtsi"
+};
+
+&pm8226_bms {
+	qcom,battery-data = <&qrd_batterydata>;
+};
+
+&pm8226_chg {
+	qcom,battery-data = <&qrd_batterydata>;
+	qcom,tchg-mins = <480>;
+};
+/*xiangdong add for battery end*/

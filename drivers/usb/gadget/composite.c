@@ -1589,8 +1589,11 @@ composite_suspend(struct usb_gadget *gadget)
 		composite->suspend(cdev);
 
 	cdev->suspended = 1;
-
+//TYDRV:xiangdong add for qrd workaround
+#ifdef TYQ_BATTERY_SUPPORT
+#else
 	usb_gadget_vbus_draw(gadget, 2);
+#endif
 }
 
 static void

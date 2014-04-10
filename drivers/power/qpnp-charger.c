@@ -2435,6 +2435,11 @@ get_prop_capacity(struct qpnp_chg_chip *chip)
 				&& !qpnp_chg_is_usb_chg_plugged_in(chip))
 				pr_warn_ratelimited("Battery 0, CHG absent\n");
 		}
+		//xiangdong add from qrd patch for soc capacity begin
+		if((bms_status == POWER_SUPPLY_STATUS_CHARGING)&&(soc == 100)){
+			soc = 99;
+		}
+		//xiangdong add from qrd patch for soc capacity end
 		return soc;
 	} else {
 		pr_debug("No BMS supply registered return 50\n");
@@ -4653,6 +4658,60 @@ do {									\
 				" property rc = %d\n", rc);		\
 } while (0)
 
+//TYDRV:xiangdong add for battery auto detect
+#ifdef TYQ_BATTERY_AUTO_DETECT_SUPPORT
+
+#define TYQ_BATTERY_AUTO_DETECT_THRESHOLD_BAK	800 * 1000 //uv
+#define TYQ_BATTERY_AUTO_DETECT_THRESHOLD_lS	300 * 1000 //uv
+
+static int
+tyq_qpnp_charger_adjust_vdd_props(struct qpnp_chg_chip *chip)
+{
+	struct qpnp_vadc_result result;
+	int rc;
+	
+	pr_err("before adjust vdd vddmax = %d, vinmin = %d, vddsafe = %d\n",
+				chip->max_voltage_mv, chip->min_voltage_mv, chip->safe_voltage_mv);
+	
+	rc = qpnp_vadc_read(chip->vadc_dev, LR_MUX2_BAT_ID, &result);
+	if (rc) {
+		pr_err("error reading batt id channel = %d, rc = %d\n",
+					LR_MUX2_BAT_ID, rc);
+		return rc;
+	}
+
+	//result.physical = result.physical / 1000;
+	
+	pr_err("reading batt id voltage_uv = %lld\n",result.physical);
+	
+	if (result.physical > TYQ_BATTERY_AUTO_DETECT_THRESHOLD_BAK) {
+		//for 4200 battery
+		chip->max_voltage_mv = 4200;
+		chip->min_voltage_mv = 4300;
+		chip->safe_voltage_mv = 4230;
+	}
+	else if(result.physical > TYQ_BATTERY_AUTO_DETECT_THRESHOLD_lS)
+	{		
+		//for 4330 battery
+		chip->max_voltage_mv = 4330;
+		chip->min_voltage_mv = 4430;
+		chip->safe_voltage_mv = 4360;
+	}
+	else
+	{		
+		//for 4350 battery
+		chip->max_voltage_mv = 4350;
+		chip->min_voltage_mv = 4450;
+		chip->safe_voltage_mv = 4380;
+	}
+
+	pr_err("after adjust vdd vddmax = %d, vinmin = %d, vddsafe = %d\n",
+				chip->max_voltage_mv, chip->min_voltage_mv, chip->safe_voltage_mv);
+
+	return 0;
+}
+#endif
+
 static int
 qpnp_charger_read_dt_props(struct qpnp_chg_chip *chip)
 {
@@ -4884,6 +4943,13 @@ qpnp_charger_probe(struct spmi_device *spmi)
 				}
 			}
 
+			//TYDRV:xiangdong add for battery auto detect
+			#ifdef TYQ_BATTERY_AUTO_DETECT_SUPPORT	
+				rc = tyq_qpnp_charger_adjust_vdd_props(chip);
+				if (rc)
+					return rc;
+			#endif
+			
 			rc = qpnp_chg_load_battery_data(chip);
 			if (rc)
 				goto fail_chg_enable;

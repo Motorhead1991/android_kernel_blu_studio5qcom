@@ -10,6 +10,9 @@
  * GNU General Public License for more details.
  *
  */
+ 
+//xiangdong add for usb otg log
+#define DEBUG
 
 #include <linux/module.h>
 #include <linux/device.h>
@@ -89,7 +92,12 @@ module_param(lpm_disconnect_thresh , uint, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(lpm_disconnect_thresh,
 	"Delay before entering LPM on USB disconnect");
 
+//TYDRV:xiangdong add for support USB unknown charger
+#ifdef TYQ_BATTERY_SUPPORT
+static bool floated_charger_enable = true;
+#else
 static bool floated_charger_enable;
+#endif
 module_param(floated_charger_enable , bool, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(floated_charger_enable,
 	"Whether to enable floated charger");
