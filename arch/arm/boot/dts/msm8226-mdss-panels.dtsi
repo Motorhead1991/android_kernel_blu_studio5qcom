@@ -21,4 +21,16 @@
 /include/ "dsi-panel-ty-5inch-otm8018b-fwvga-video.dtsi"
 /include/ "dsi-panel-ty-5inch-trust-otm8018b-fwvga-video.dtsi"
 /include/ "dsi-panel-ty-5inch-truly-fwvga-hx8379a-video.dtsi"
+/include/ "dsi-panel-ty-hx8389b-qhd-video.dtsi"
+/include/ "dsi-panel-ty-tianma-otm8018b-fwvga-video.dtsi"
+/include/ "dsi-panel-ty-ofilm-otm9605a-qhd-video.dtsi"
 /*TYRD wuxh add for 5inch fwvga lcd on 20131226 end */
+/include/ "dsi-panel-ty-45inch-ofilm-fwvga-hx8379a-video.dtsi"
+/*TYRD jinxr add for 4.5inch truly fwvga lcd on 20140116*/
+/*TYRD xiangdong add for 4.5inch trust fwvga lcd on 20140120*/
+/include/ "dsi-panel-ty-45inch-trust-otm8018b-fwvga-video.dtsi"
+/*TYDRV:chenjp 2014.01.21 add for 5inch ofilm otm1283a 720p lcd support*/
+/include/ "dsi-panel-ty-5inch-ofilm-otm1283a-720p-video.dtsi"
+/*TYDRV:xiangdong add for 4.5inch trust ips fwvga lcd on 20140120*/
+/include/ "dsi-panel-ty-45ips-trust-otm8018b-fwvga-video.dtsi"
+/include/ "dsi-panel-ty-55inch-otm9605a-qhd-video.dtsi"
