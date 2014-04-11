@@ -3453,6 +3453,11 @@ static struct clk_lookup msm_clocks_8226[] = {
 	//TY wuchx 2014-3-18 add for ov2680 begin
 	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "62.qcom,camera"),
 	//TY wuchx 2013-11-26 add for ov2680 end
+	//TY wang_gj 2014-1-15 add for ov5648_rear end	
+	//TY wang_gj 2013-11-1 add for ov2675 begin
+	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "60.qcom,camera"),
+	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "60.qcom,camera"),
+	//TY wang_gj 2013-11-1 add for ov2675  end
 
 	/* eeprom clocks */
 	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "6c.qcom,eeprom"),
@@ -3475,6 +3480,10 @@ static struct clk_lookup msm_clocks_8226[] = {
 	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "4b.qcom,eeprom"),
 	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "4b.qcom,eeprom"),
 	//TY wang_gj 2014-1-15 add for ov5648_rear end	
+	//TY wang_gj 2013-11-18 add for ov8830 begin	
+	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "61.qcom,eeprom"),
+	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "61.qcom,eeprom"),
+	//TY wang_gj 2013-11-18 add for ov8830 end	
 
 	/* CCI clocks */
 	CLK_LOOKUP("camss_top_ahb_clk", camss_top_ahb_clk.c,

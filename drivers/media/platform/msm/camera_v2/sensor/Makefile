@@ -13,6 +13,9 @@ obj-$(CONFIG_IMX135) += imx135.o
 obj-$(CONFIG_IMX134) += imx134.o
 obj-$(CONFIG_OV8825) += ov8825.o
 obj-$(CONFIG_OV8865) += ov8865.o
+#wang_gj 2014-3-30 added begin
+obj-$(CONFIG_OV8830) += ov8830.o
+#wang_gj 2014-3-30 added end
 obj-$(CONFIG_s5k4e1) += s5k4e1.o
 obj-$(CONFIG_OV12830) += ov12830.o
 obj-$(CONFIG_OV2720) += ov2720.o
@@ -21,6 +24,9 @@ obj-$(CONFIG_HI256) += hi256.o
 obj-$(CONFIG_OV5648) += ov5648.o
 #wang_gj 2014-3-30 added begin
 obj-$(CONFIG_OV5648_REAR) += ov5648_rear.o
+#wang_gj 2014-3-30 added end
+#wang_gj 2014-3-30 added begin
+obj-$(CONFIG_OV2675) += ov2675.o
 #wang_gj 2014-3-30 added end
 obj-$(CONFIG_MT9M114) += mt9m114.o
 obj-$(CONFIG_SP1628) += sp1628.o
