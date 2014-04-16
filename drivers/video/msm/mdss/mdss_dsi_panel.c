@@ -400,7 +400,9 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 	if (ctrl->on_cmds.cmd_cnt)
 		mdss_dsi_panel_cmds_send(ctrl, &ctrl->on_cmds);
 
-	pr_debug("%s:-\n", __func__);
+	//xiangdong modify for debug info
+	//pr_debug("%s:-\n", __func__);
+	pr_err("%s:-\n", __func__);
 	return 0;
 }
 
@@ -408,7 +410,9 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 {
 	struct mipi_panel_info *mipi;
 	struct mdss_dsi_ctrl_pdata *ctrl = NULL;
-
+/*TYRD wuxh add begin for ssd lcd on 20140123*/
+	u32 data;
+/*TYRD wuxh add end for ssd lcd on 20140123*/
 	if (pdata == NULL) {
 		pr_err("%s: Invalid input data\n", __func__);
 		return -EINVAL;
@@ -421,10 +425,51 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 
 	mipi  = &pdata->panel_info.mipi;
 
+/*TYRD wuxh add begin for white lcd blink when poweroff on 20140123*/
+	if(ctrl->pwm_enabled)
+		mdss_dsi_panel_bl_ctrl(pdata,0);
+/*TYRD wuxh add end for white lcd blink when poweroff on 20140123*/
+/*TYRD wuxh add begin for ssd lcd on 20140123*/
+	if(ctrl->off_cmds.link_state ==DSI_HS_MODE)
+	{
+		data = 0;
+		data = MIPI_INP(ctrl->ctrl_base + 0x00AC);
+		data |= BIT(28);
+		MIPI_OUTP(ctrl->ctrl_base + 0x00AC, data);
+		data = 0;
+		data = MIPI_INP((ctrl->ctrl_base) + 0x0010);
+		data |= BIT(12);
+		MIPI_OUTP((ctrl->ctrl_base) + 0x0010, data);
+		
+		pr_err("%s: ctrl->ctrl_base = %x \n", __func__,((int)ctrl->ctrl_base));
+	}
+/*TYRD wuxh add end for ssd lcd on 20140123*/
 	if (ctrl->off_cmds.cmd_cnt)
 		mdss_dsi_panel_cmds_send(ctrl, &ctrl->off_cmds);
+/*TYRD wuxh add begin for ssd lcd on 20140123*/
+	
+	if(ctrl->off_cmds.link_state ==DSI_HS_MODE)
+	{
+		data =0;
+		data = MIPI_INP(ctrl->ctrl_base + 0x00AC);
+		
+		pr_err("%s:FORCE CLK  ctrl->ctrl_base + 28 = 0x%x \n", __func__,data);
 
-	pr_debug("%s:-\n", __func__);
+		data &= ~BIT(28);
+		MIPI_OUTP(ctrl->ctrl_base + 0x00AC, data);
+		data = 0;
+		data = MIPI_INP((ctrl->ctrl_base) + 0x0010);
+		pr_err("%s:POWER MODE ctrl->ctrl_base + 10 = 0x%x \n", __func__,data);
+		data &= ~BIT(12);
+		MIPI_OUTP((ctrl->ctrl_base) + 0x0010, data);
+
+
+
+		mdelay(50);
+	}
+/*TYRD wuxh add begin for ssd lcd on 20140123*/
+
+	pr_err("%s:-\n", __func__);
 	return 0;
 }
 

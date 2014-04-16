@@ -41,6 +41,9 @@ obj-$(CONFIG_FB_MSM_QPIC) += mdss-qpic.o
 obj-$(CONFIG_FB_MSM_QPIC_ILI_QVGA_PANEL) += qpic_panel_ili_qvga.o
 
 obj-$(CONFIG_FB_MSM_MDSS) += mdss_fb.o
+#TY wuchx 2013-10-25 add for KTCIT interface begin
+obj-y += lcd_common.o
+#TY wuchx 2013-10-25 add for KTCIT interface end
 
 ifeq ($(CONFIG_FB_MSM_MDSS_MDP3),y)
 obj-$(CONFIG_FB_MSM_MDSS_DSI_CTRL_STATUS) += dsi_status_v2.o

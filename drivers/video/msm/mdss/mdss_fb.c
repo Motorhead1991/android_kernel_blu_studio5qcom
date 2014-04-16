@@ -812,7 +812,13 @@ static int mdss_fb_blank_sub(int blank_mode, struct fb_info *info,
 			del_timer(&mfd->no_update.timer);
 			mfd->no_update.value = NOTIFY_TYPE_SUSPEND;
 			complete(&mfd->no_update.comp);
-
+			/*TYRD wuxh add begin for white lcd blink when poweroff on 20140123*/
+			if(mfd->bl_level)
+			{
+				mdss_fb_set_backlight(mfd,0);
+			
+			}
+			/*TYRD wuxh add end for white lcd blink when poweroff on 20140123*/
 			mfd->op_enable = false;
 			curr_pwr_state = mfd->panel_power_on;
 			mfd->panel_power_on = false;

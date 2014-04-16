@@ -257,7 +257,8 @@ static void msm_restart_prepare(const char *cmd)
 
 	/* Write download mode flags if we're panic'ing */
 	set_dload_mode(in_panic);
-
+	/*TYRD wuxh modify begin for diag switch download mod fail when download_mode==0 on 20131223*/
+#if 0
 	/* Write download mode flags if restart_mode says so */
 	if (restart_mode == RESTART_DLOAD)
 		set_dload_mode(1);
@@ -265,7 +266,18 @@ static void msm_restart_prepare(const char *cmd)
 	/* Kill download mode if master-kill switch is set */
 	if (!download_mode)
 		set_dload_mode(0);
+#else
+	/* Kill download mode if master-kill switch is set */
+	if (!download_mode)
+		set_dload_mode(0);
+
+	/* Write download mode flags if restart_mode says so */
+	if (restart_mode == RESTART_DLOAD)
+		set_dload_mode(1);
 #endif
+/*TYRD wuxh modify end for diag switch download mod fail when download_mode==0 on 20131223*/
+
+#endif	
 
 	pm8xxx_reset_pwr_off(1);
 

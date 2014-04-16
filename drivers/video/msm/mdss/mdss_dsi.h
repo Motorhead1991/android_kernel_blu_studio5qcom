@@ -328,8 +328,12 @@ struct mdss_dsi_ctrl_pdata *mdss_dsi_ctrl_slave(
 
 irqreturn_t mdss_dsi_isr(int irq, void *ptr);
 void mdss_dsi_irq_handler_config(struct mdss_dsi_ctrl_pdata *ctrl_pdata);
-
+/*TYRD wuxh add begin for MSM lcd patch for DSI_LP_MODE off cmd fail on 20140123*/
+#if 0
 void mipi_set_tx_power_mode(int mode, struct mdss_panel_data *pdata);
+#else
+void mdss_set_tx_power_mode(int mode, struct mdss_panel_data *pdata);
+#endif 
 int mdss_dsi_clk_div_config(struct mdss_panel_info *panel_info,
 			    int frame_rate);
 int mdss_dsi_clk_init(struct platform_device *pdev,

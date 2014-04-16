@@ -1129,6 +1129,11 @@ struct subsys_device *subsys_register(struct subsys_desc *desc)
 	subsys->dev.parent = desc->dev;
 	subsys->dev.bus = &subsys_bus_type;
 	subsys->dev.release = subsys_device_release;
+/*TYRD wuxh add begin for ssr default enable on 20140401*/
+	#ifdef TYQ_SSR_ENABLE
+	subsys->restart_level = 1;
+	#endif
+/*TYRD wuxh add end for ssr default enable on 20140401*/
 
 	subsys->notify = subsys_notif_add_subsys(desc->name);
 	subsys->restart_order = update_restart_order(subsys);

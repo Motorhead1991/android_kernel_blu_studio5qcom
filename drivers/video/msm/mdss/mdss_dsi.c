@@ -26,6 +26,9 @@
 #include "mdss_panel.h"
 #include "mdss_dsi.h"
 #include "mdss_debug.h"
+//TY wuchx 2013-10-25 add for panel id begin
+#include "lcd_common.h"
+//TY wuchx 2013-10-25 add for panel id end
 
 static unsigned char *mdss_dsi_base;
 
@@ -621,6 +624,7 @@ int mdss_dsi_cont_splash_on(struct mdss_panel_data *pdata)
 
 	mdss_dsi_sw_reset(pdata);
 	mdss_dsi_host_init(mipi, pdata);
+#if 0
 	mdss_dsi_op_mode_config(mipi->mode, pdata);
 
 	if (ctrl_pdata->on_cmds.link_state == DSI_LP_MODE) {
@@ -630,6 +634,23 @@ int mdss_dsi_cont_splash_on(struct mdss_panel_data *pdata)
 			return ret;
 		}
 	}
+#else
+/*TYRD wuxh add begin for MSM lcd patch for DSI_LP_MODE off cmd fail on 20140123*/
+	mdss_dsi_op_mode_config(DSI_CMD_MODE, pdata);
+
+	if (ctrl_pdata->on_cmds.link_state == DSI_HS_MODE)
+		mdss_set_tx_power_mode(0, pdata);
+	ret = mdss_dsi_unblank(pdata);
+	if (ctrl_pdata->on_cmds.link_state == DSI_HS_MODE)
+		mdss_set_tx_power_mode(1, pdata);
+	if (ret) {
+		pr_err("%s: unblank failed\n", __func__);
+		return ret;
+	}
+
+	mdss_dsi_op_mode_config(mipi->mode, pdata);
+/*TYRD wuxh add for MSM lcd patch for DSI_LP_MODE off cmd fail on 20140123*/
+#endif
 
 	pr_debug("%s-:End\n", __func__);
 	return ret;
@@ -789,8 +810,18 @@ static int mdss_dsi_event_handler(struct mdss_panel_data *pdata,
 		break;
 	case MDSS_EVENT_PANEL_OFF:
 		ctrl_pdata->ctrl_state &= ~CTRL_STATE_MDP_ACTIVE;
+/*TYRD wuxh add begin for MSM lcd patch for DSI_LP_MODE off cmd fail on 20140123*/
+#if 0
 		if (ctrl_pdata->off_cmds.link_state == DSI_LP_MODE)
 			rc = mdss_dsi_blank(pdata);
+#else
+		if (ctrl_pdata->off_cmds.link_state == DSI_LP_MODE) {
+			mdss_dsi_sw_reset(pdata);
+			mdss_dsi_host_init(&pdata->panel_info.mipi, pdata);
+			rc = mdss_dsi_blank(pdata);
+		}
+#endif 
+/*TYRD wuxh add end for MSM lcd patch for DSI_LP_MODE off cmd fail on 20140123*/
 		rc = mdss_dsi_off(pdata);
 		break;
 	case MDSS_EVENT_CONT_SPLASH_FINISH:
@@ -918,6 +949,17 @@ static struct device_node *mdss_dsi_find_panel_of_node(
 			       __func__);
 			goto end;
 		}
+		//TY wuchx 2013-10-25 add for panel id begin
+		if((strlen(panel_name)+1) <=MAX_DTSI_NAME_SIZE){
+			 strcpy(lcd_panel_dtsi_name,panel_name);
+		}else{
+			//panel name from bootloader is too long
+			//copy warning string 
+			strcpy(lcd_panel_dtsi_name,lcd_panel_table[1].panel_dtsi_name);
+		}
+		printk("%s:%d:lcd_panel_dtsi_name = %s\n", __func__, __LINE__,
+			 lcd_panel_dtsi_name);
+		//TY wuchx 2013-10-25 add for panel id end
 		return dsi_pan_node;
 	}
 end:
