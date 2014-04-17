@@ -96,8 +96,8 @@
 					39 01 00 00 00 00 05
 					        B6 00 9a 00
 					        9a
-					05 01 00 00 78 00 02 11 00
-                                        05 01 00 00 64 00 02 29 00
+					05 01 00 00 96 00 02 11 00
+                                        05 01 00 00 78 00 02 29 00
 					];
 		qcom,mdss-dsi-off-command = [05 01 00 00 32 00 02 28 00
 					05 01 00 00 78 00 02 10 00];
@@ -121,7 +121,7 @@
 		qcom,mdss-dsi-dma-trigger = "trigger_sw";
 		qcom,mdss-dsi-mdp-trigger = "none";
 		qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_wled";
-		qcom,mdss-dsi-reset-sequence = <1 20>, <0 10>, <1 20>;
+		qcom,mdss-dsi-reset-sequence = <1 20>, <0 10>, <1 40>;
 		qcom,mdss-dsi-lp11-init;
 		qcom,mdss-dsi-init-delay-us = <50000>;
 
