@@ -22,6 +22,7 @@
 /include/ "dsi-panel-ty-5inch-trust-otm8018b-fwvga-video.dtsi"
 /include/ "dsi-panel-ty-5inch-truly-fwvga-hx8379a-video.dtsi"
 /include/ "dsi-panel-ty-hx8389b-qhd-video.dtsi"
+/include/ "dsi-panel-ty-hx8389b-qhd-video-truly-lg.dtsi"
 /include/ "dsi-panel-ty-tianma-otm8018b-fwvga-video.dtsi"
 /include/ "dsi-panel-ty-ofilm-otm9605a-qhd-video.dtsi"
 /*TYRD wuxh add for 5inch fwvga lcd on 20131226 end */
