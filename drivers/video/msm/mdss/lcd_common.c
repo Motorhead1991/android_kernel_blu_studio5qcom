@@ -22,6 +22,7 @@ struct panel_info lcd_panel_table[]=
 /*jinxr add for truly qhd lcd*/
 #if defined(TY_CONFIG_TRULY_LCD_HX8389B_QHD_SUPPORT)
     {"5inch JDI truly-hx8989b","qcom,mdss_dsi_ty_hx8389b_qhd_video"},
+	{"5inch LG truly-hx8989b","qcom,mdss_dsi_ty_hx8389b_trulylg_qhd_video"},
 #endif
 /*jinxr add for ofilm qhd lcd*/
 #if defined(TY_CONFIG_OFILM_LCD_OTM9605A_QHD_SUPPORT)
