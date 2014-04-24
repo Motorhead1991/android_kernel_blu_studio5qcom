@@ -104,6 +104,10 @@ endif
 ifeq (y,$(findstring y,$(filter TYQ_TBT5957B_SUPPORT=%,$(TY_CP_OPTION))))
  	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-v1-qrd-skug-5957b.dtb
  	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-v2-qrd-skug-5957b.dtb
+#wuchx added for 5971 dtb 20140423
+else ifeq (y,$(findstring y,$(filter TYQ_TBT5971_SUPPORT=%,$(TY_CP_OPTION))))
+ 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-v1-qrd-skug-5971.dtb
+ 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-v2-qrd-skug-5971.dtb
 else ifeq (y,$(findstring y,$(filter TYQ_DTS_SUPPORT=%,$(TY_CP_OPTION))))
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-v1-qrd-skug.dtb
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-v2-qrd-skug.dtb

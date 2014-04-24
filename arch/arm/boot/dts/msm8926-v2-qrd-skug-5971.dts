@@ -11,7 +11,7 @@
  */
 
 /dts-v1/;
-/include/ "msm8926-v1.dtsi"
+/include/ "msm8926-v2.dtsi"
 /include/ "msm8926-qrd-skug.dtsi"
 
 / {
@@ -49,6 +49,16 @@
 			qcom,clk-gpio = <&pm8226_gpios 3 0>;
 		};
 	};
+	gpio_keys {
+		vol_up {
+			label = "volume_down";
+			gpios = <&msmgpio 106 0x1>;
+			linux,input-type = <1>;
+			linux,code = <114>;
+			gpio-key,wakeup;
+			debounce-interval = <15>;
+		};
+	};
 };
 &pm8226_gpios {
 	gpio@c100 { /* GPIO 2 */
@@ -70,25 +80,14 @@
 	};
 };
 /*xiangdong add for nfc end*/
-/*xiangdong add for battery begin*/
-&qrd_batterydata {
-	qcom,rpull-up-kohm = <100>;
-	qcom,vref-batt-therm = <1800000>;
 
-	/include/ "batterydata-qrd-4v2-2000mah.dtsi"
-	/include/ "TY_batterydata-qrd-4v35-2200mah.dtsi"
-	/include/ "TY_batterydata-qrd-LS-4v33-2250mah.dtsi"
+&mdss_dsi0 {
+	qcom,dsi-pref-prim-pan = <&dsi_hx8394a_720_vid>;
+};
+&dsi_hx8394a_720_vid{
+	qcom,cont-splash-enabled;
 };
 
-&pm8226_bms {
-	qcom,battery-data = <&qrd_batterydata>;
-};
-
-&pm8226_chg {
-	qcom,battery-data = <&qrd_batterydata>;
-	qcom,tchg-mins = <480>;
-};
-/*xiangdong add for battery end*/
 &spmi_bus {
 	qcom,pm8226@0 {
 		qcom,leds@a100 {
@@ -106,5 +105,48 @@
 				qcom,mode-ctrl = <0x60>;
 				};
 			};
+		qcom,power-on@800 {
+			compatible = "qcom,qpnp-power-on";
+			reg = <0x800 0x100>;
+			interrupts = <0x0 0x8 0x0>,
+				     <0x0 0x8 0x1>,
+				     <0x0 0x8 0x4>,
+				     <0x0 0x8 0x5>;
+			interrupt-names = "kpdpwr", "resin",
+					"resin-bark", "kpdpwr-resin-bark";
+			qcom,pon-dbc-delay = <15625>;
+			qcom,system-reset;
+			qcom,s3-debounce = <32>;
+			qcom,s3-src = "kpdpwr-and-resin";
+
+			qcom,pon_1 {
+				qcom,pon-type = <0>;
+				qcom,pull-up = <1>;
+				linux,code = <116>;
+			};
+
+			qcom,pon_2 {
+				qcom,pon-type = <1>;
+				qcom,pull-up = <1>;
+				linux,code = <115>;
+			};
+
+			qcom,pon_3 {
+				qcom,pon-type = <3>;
+				qcom,support-reset = <1>;
+				qcom,pull-up = <1>;
+				qcom,s1-timer = <6720>;
+				qcom,s2-timer = <2000>;
+				qcom,s2-type = <7>;
+				qcom,use-bark;
+			};
 		};
+	};
+	qcom,pm8226@1 {
+		qcom,leds@d800 {
+			qcom,wled_0 {
+				qcom,max-current = <25>;
+			};
+		};
+	};
 };

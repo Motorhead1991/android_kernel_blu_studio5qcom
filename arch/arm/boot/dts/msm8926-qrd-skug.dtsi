@@ -72,6 +72,19 @@
 			vcc_i2c-supply = <&pm8226_lvs1>;
 		};
 		/* lichm merge for mstar tp end */
+
+		/* wuchx merge for goodix tp begin */
+		goodix@5d {
+			compatible = "goodix,gt9xx";
+			reg = <0x5d>;
+			interrupt-parent = <&msmgpio>;
+			interrupts = <17 0x2008>;
+			reset-gpios = <&msmgpio 16 0x00>;
+			interrupt-gpios = <&msmgpio 17 0x00>;
+			vdd-supply = <&pm8226_l19>;
+			vcc_i2c-supply = <&pm8226_lvs1>;
+		};
+		/* wuchx merge for goodix tp end */
 	};
 
 	gen-vkeys {
