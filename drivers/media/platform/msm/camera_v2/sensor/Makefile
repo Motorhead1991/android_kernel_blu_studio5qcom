@@ -13,6 +13,9 @@ obj-$(CONFIG_IMX135) += imx135.o
 obj-$(CONFIG_IMX134) += imx134.o
 obj-$(CONFIG_OV8825) += ov8825.o
 obj-$(CONFIG_OV8865) += ov8865.o
+#wang_gj 2014-4-26 added begin
+obj-$(CONFIG_OV8830) += ov8858.o
+#wang_gj 2014-4-26 added end
 #wang_gj 2014-3-30 added begin
 obj-$(CONFIG_OV8830) += ov8830.o
 #wang_gj 2014-3-30 added end
