@@ -1143,7 +1143,7 @@ struct subsys_device *subsys_register(struct subsys_desc *desc)
 	subsys->dev.release = subsys_device_release;
 /*TYRD wuxh add begin for ssr default enable on 20140401*/
 	#ifdef TYQ_SSR_ENABLE
-	subsys->restart_level = 1;
+	//subsys->restart_level = 1;
 	#endif
 /*TYRD wuxh add end for ssr default enable on 20140401*/
 
