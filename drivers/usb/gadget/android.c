@@ -2958,8 +2958,20 @@ static int __devinit android_probe(struct platform_device *pdev)
 				&pdata->swfi_latency);
 		pdata->cdrom = of_property_read_bool(pdev->dev.of_node,
 				"qcom,android-usb-cdrom");
+
+/*TY ShenLei 2014/04/28 Add For InternalStorage Start*/
+/*
 		pdata->internal_ums = of_property_read_bool(pdev->dev.of_node,
 				"qcom,android-usb-internal-ums");
+*/
+#ifdef TYQ_INTERNAL_STORAGE_IS_EMULATED
+             pdata->internal_ums = false;
+#else
+             pdata->internal_ums = of_property_read_bool(pdev->dev.of_node,
+				"qcom,android-usb-internal-ums");
+#endif
+/*TY ShenLei 2014/04/28 Add For InternalStorage End*/
+
 		len = of_property_count_strings(pdev->dev.of_node,
 				"qcom,streaming-func");
 		if (len > MAX_STREAMING_FUNCS) {
