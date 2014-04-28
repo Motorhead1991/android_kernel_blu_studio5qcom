@@ -71,6 +71,10 @@ struct panel_info lcd_panel_table[]=
 #if defined(TYQ_5INCH_OFILM_OTM1283A_720P_LCD_SUPPORT)
 	{"ofilm otm1283a 720p","qcom,mdss_dsi_ofilm_otm1283a_720p_video"},
 #endif
+/*TYDRV:lichm 20140426 add for 5inch truly hx8394a 720p lcd support*/
+#if defined(TYQ_CONFIG_5INCH_TRYLY_HX8394A_HD_LCD_SUPPORT)
+	{"hx8394a 5inch hd ty video mode dsi panel","qcom,mdss_dsi_ty_5inch_hx8394a_hd_video"},
+#endif
 };
 /*Adding new panel to lcd_panel_table: modify end*/
 
