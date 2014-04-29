@@ -1,0 +1,36 @@
+*TYRD WANG_GJ MSM8926 CAMERA RELEATED REG ADDR *
+
+/* If add a new sensor driver, please use a not occupied reg addr , and then add it to the below table. */
+
+1.Being occupied reg addr of camera:
+	REG_ADDR         SENSOR
+	0x13,		ov13850;
+	0x22,		ov8858;
+	0x20,		ov8865;
+	0x20,		imx135;
+	0x21,		ov9760_q1v04a;
+	0x42,		ov7695;
+	0x4a,		ov5648_rear;
+	0x60,		ov2675;
+	0x62,		ov2680;
+	0x6a,		ov5648;
+	0x6b,		ov9760;
+	0x6d,		ov9724;
+	0x6f,		ov8825;
+	0x6f,		ov8830;
+	0x90,		mt9m114;
+
+2.Being occupied reg addr of eeprom:
+	REG_ADDR         MODULE
+	0x12,		ov9760_oty1f01;
+	0x13,		ov9760_q1v04a;
+	0x14,		sunny_q13v03a;
+	0x15,		ofilm_oty8a04;
+	0x18,		sunny_p12v01m;
+	0x4b,		sunny_q5v22e;
+	0x61,		sunny_q8v09k;
+	0x6b,		ofilm_oty5f03;
+	0x6b,		sunny_p5v23c;
+	0x6c,		truly_cm7700;
+	0x6c,		sunny_q8v18a;
+	
