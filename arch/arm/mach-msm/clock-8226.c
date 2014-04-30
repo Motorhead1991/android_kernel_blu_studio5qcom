@@ -3462,6 +3462,10 @@ static struct clk_lookup msm_clocks_8226[] = {
 	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "22.qcom,camera"),
 	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "22.qcom,camera"),
 	//TY wang_gj 2014-4-26 add for ov8858  end
+	//TY gaohw 2014-4-30 add for ov8858(truly) begin
+	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "81.qcom,camera"),
+	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "81.qcom,camera"),
+	//TY wang_gj 2014-4-26 add for ov8858(truly)  end
 
 	/* eeprom clocks */
 	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "6c.qcom,eeprom"),
@@ -3488,6 +3492,10 @@ static struct clk_lookup msm_clocks_8226[] = {
 	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "15.qcom,eeprom"),
 	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "15.qcom,eeprom"),
 	//TY wang_gj 2014-4-26 add for ov8858 end	
+	//TY gaohw 2014-4-30 add for ov8858 (truly)begin	
+	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "81.qcom,eeprom"),
+	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "81.qcom,eeprom"),
+	//TY wang_gj 2014-4-26 add for ov8858(truly) end	
 	//TY wang_gj 2013-11-18 add for ov8830 begin	
 	CLK_LOOKUP("cam_src_clk", mclk0_clk_src.c, "61.qcom,eeprom"),
 	CLK_LOOKUP("cam_clk", camss_mclk0_clk.c, "61.qcom,eeprom"),

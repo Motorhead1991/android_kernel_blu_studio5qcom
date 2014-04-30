@@ -16,6 +16,9 @@ obj-$(CONFIG_OV8865) += ov8865.o
 #wang_gj 2014-4-26 added begin
 obj-$(CONFIG_OV8858) += ov8858.o
 #wang_gj 2014-4-26 added end
+#gaohw 2014-4-30 added begin
+obj-$(CONFIG_OV8858) += ov8858_cm9554.o
+#gaohw 2014-4-30 added end
 #wang_gj 2014-3-30 added begin
 obj-$(CONFIG_OV8830) += ov8830.o
 #wang_gj 2014-3-30 added end

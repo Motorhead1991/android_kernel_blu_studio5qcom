@@ -5,7 +5,7 @@
 1.Being occupied reg addr of camera:
 	REG_ADDR         SENSOR
 	0x13,		ov13850;
-	0x22,		ov8858;
+	0x22,		ov8858; (saddr : 0x20)
 	0x20,		ov8865;
 	0x20,		imx135;
 	0x21,		ov9760_q1v04a;
@@ -19,6 +19,7 @@
 	0x6f,		ov8825;
 	0x6f,		ov8830;
 	0x90,		mt9m114;
+	0x81		ov8858 (saddr :0x6c)
 
 2.Being occupied reg addr of eeprom:
 	REG_ADDR         MODULE
@@ -33,4 +34,5 @@
 	0x6b,		sunny_p5v23c;
 	0x6c,		truly_cm7700;
 	0x6c,		sunny_q8v18a;
+	0x81		truly_cm9554
 	
