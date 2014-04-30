@@ -492,7 +492,7 @@
 		qcom,slave-id = <0x6C 0x300b 0x8858>;
 		qcom,csiphy-sd-index = <0>;
 		qcom,csid-sd-index = <0>;
-		qcom,actuator-src = <&actuator1>;
+		qcom,actuator-src = <&actuator0>;
 		qcom,led-flash-src = <&led_flash0>;
 		qcom,eeprom-src = <&eeprom10>;
 		qcom,mount-angle = <90>;
