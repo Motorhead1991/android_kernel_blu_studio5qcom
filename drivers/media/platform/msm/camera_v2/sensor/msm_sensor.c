@@ -1143,6 +1143,8 @@ char back_camera_name[CAMERA_NAME_SIZE]="NULL";
 char front_camera_name[CAMERA_NAME_SIZE]="NULL";
 static char back_camera_mid[CAMERA_NAME_SIZE]="NULL";
 static char front_camera_mid[CAMERA_NAME_SIZE]="NULL";
+static char back_camera_module_name[CAMERA_NAME_SIZE]="";
+static char front_camera_module_name[CAMERA_NAME_SIZE]="";
 static  int back_camera_pixel_index=0;
 static  int front_camera_pixel_index=0;
 
@@ -1193,6 +1195,30 @@ static ssize_t front_camera_module_id_show(struct kobject *d,
 	return snprintf(buf, CAMERA_NAME_SIZE, "/dev/%s", front_camera_mid);
 
 }
+static ssize_t back_camera_module_name_store(struct kobject *d, struct kobj_attribute *attr,
+	const char *buf, size_t count)
+{
+	memcpy(back_camera_module_name, buf,count);
+	 return count;
+}
+static ssize_t back_camera_module_name_show(struct kobject *d, 
+		struct kobj_attribute *attr, char *buf)
+{
+	return snprintf(buf, CAMERA_NAME_SIZE, "%s\n", back_camera_module_name);
+
+}
+static ssize_t front_camera_module_name_store(struct kobject *d, struct kobj_attribute *attr,
+	const char *buf, size_t count)
+{
+	memcpy(front_camera_module_name, buf,count);
+	 return count;
+}
+static ssize_t front_camera_module_name_show(struct kobject *d, 
+		struct kobj_attribute *attr, char *buf)
+{
+	return snprintf(buf, CAMERA_NAME_SIZE, "%s\n", front_camera_module_name);
+
+}
 
 static struct kobj_attribute backcamera_name_attr = {
 	.attr={
@@ -1239,6 +1265,22 @@ static struct kobj_attribute frontcamera_module_id_attr = {
 	.show = front_camera_module_id_show,
 	.store = front_camera_module_id_store,
 };
+static struct kobj_attribute backcamera_module_name_attr = {
+	.attr={
+	.name = "backcamera_module_name",
+	.mode = S_IRWXG|S_IRWXU|S_IROTH,
+	},
+	.show = back_camera_module_name_show,
+	.store = back_camera_module_name_store,
+};
+static struct kobj_attribute frontcamera_module_name_attr = {
+	.attr={
+	.name = "frontcamera_module_name",
+	.mode = S_IRWXG|S_IRWXU|S_IROTH,
+	},
+	.show = front_camera_module_name_show,
+	.store = front_camera_module_name_store,
+};
 
 static struct attribute *camera_name_attrs[]={
 	&backcamera_name_attr.attr,
@@ -1247,6 +1289,8 @@ static struct attribute *camera_name_attrs[]={
 	&frontcamera_pixel_index_attr.attr,
 	&backcamera_module_id_attr.attr,
 	&frontcamera_module_id_attr.attr,
+	&backcamera_module_name_attr.attr,
+	&frontcamera_module_name_attr.attr,
 	NULL,
 };
 static struct attribute_group camera_name_attrs_group = {
