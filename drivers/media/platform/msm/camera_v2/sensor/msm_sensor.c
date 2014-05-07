@@ -1375,6 +1375,7 @@ else if(!strcmp(s_ctrl->sensordata->sensor_name,"ov2720")
 else if(!strcmp(s_ctrl->sensordata->sensor_name,"ov5648_oty5a01")
 	||!strcmp(s_ctrl->sensordata->sensor_name,"ov5648_oty5a05")
 	||!strcmp(s_ctrl->sensordata->sensor_name,"ov5648_oty5f03")
+   ||!strcmp(s_ctrl->sensordata->sensor_name,"ov2680")
 	||!strcmp(s_ctrl->sensordata->sensor_name,"imx134"))
 	front_camera_pixel_index=PIXEL_INDEX_5MP;//5Mp
 else if(!strcmp(s_ctrl->sensordata->sensor_name,"ov8830_q8v09k")
