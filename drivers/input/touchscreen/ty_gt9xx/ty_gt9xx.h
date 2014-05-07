@@ -418,6 +418,10 @@ extern u16 total_len;
 #define GTP_MAX_HEIGHT	 1280
  #define GTP_MAX_WIDTH	  720
 
+#elif defined(TYQ_TP_THIRD_MENU_1080x1920)
+#define GTP_MAX_HEIGHT	 1920
+ #define GTP_MAX_WIDTH	  1080
+
 #else
   #define GTP_MAX_HEIGHT   1280
   #define GTP_MAX_WIDTH    720

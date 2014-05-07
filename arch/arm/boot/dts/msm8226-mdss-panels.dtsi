@@ -35,6 +35,8 @@
 
 /*TYDRV:chenjp 2014.01.21 add for 5inch ofilm otm1283a 720p lcd support*/
 /include/ "dsi-panel-ty-5inch-ofilm-otm1283a-720p-video.dtsi"
+/*TYDRV:niuli 2014.04.21 add for 6inch truly r63315 1080p lcd support*/
+/include/ "dsi-panel-ty-6inch-truly-r63315-1080p-video.dtsi"
 /*TYDRV:xiangdong add for 4.5inch trust ips fwvga lcd on 20140120*/
 /include/ "dsi-panel-ty-45ips-trust-otm8018b-fwvga-video.dtsi"
 /include/ "dsi-panel-ty-55inch-otm9605a-qhd-video.dtsi"

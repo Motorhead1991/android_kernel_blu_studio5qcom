@@ -216,6 +216,9 @@ static struct msm_gpiomux_config msm_keypad_configs[] __initdata = {
 			[GPIOMUX_SUSPENDED] = &gpio_keys_suspend,
 		},
 	},
+	/*niuli delete 108 as key*/
+	#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
+	#else
 	{
 		.gpio = 108,
 		.settings = {
@@ -223,11 +226,17 @@ static struct msm_gpiomux_config msm_keypad_configs[] __initdata = {
 			[GPIOMUX_SUSPENDED] = &gpio_keys_suspend,
 		},
 	},
+	#endif
+	/**/
 };
 
 static struct gpiomux_setting lcd_rst_act_cfg = {
 	.func = GPIOMUX_FUNC_GPIO,
+	#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
+	.drv = GPIOMUX_DRV_16MA,  //niuli modify
+	#else
 	.drv = GPIOMUX_DRV_8MA,
+	#endif
 	.pull = GPIOMUX_PULL_UP,
 	.dir = GPIOMUX_OUT_HIGH,
 };
@@ -247,7 +256,11 @@ static struct msm_gpiomux_config msm_lcd_configs[] __initdata = {
 		},
 	},
 	{
-		.gpio = 109,		/* LCD Enable */
+	       #if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
+		.gpio = 108,		/* LCD Enable 109*///niuli modify
+		#else
+		.gpio = 109,		/* LCD Enable 109*/
+		#endif
 		.settings = {
 			[GPIOMUX_ACTIVE]    = &lcd_rst_act_cfg,
 			[GPIOMUX_SUSPENDED] = &lcd_rst_sus_cfg,
