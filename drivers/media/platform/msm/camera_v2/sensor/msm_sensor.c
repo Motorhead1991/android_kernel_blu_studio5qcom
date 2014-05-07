@@ -1346,12 +1346,16 @@ else if(!strcmp(s_ctrl->sensordata->sensor_name,"ov5648_oty5a01")
 	back_camera_pixel_index=PIXEL_INDEX_5MP;//5Mp
 else if(!strcmp(s_ctrl->sensordata->sensor_name,"ov8830_q8v09k")
 	||!strcmp(s_ctrl->sensordata->sensor_name,"ov8865_q8v18a")
-	||!strcmp(s_ctrl->sensordata->sensor_name,"ov8825"))
+	||!strcmp(s_ctrl->sensordata->sensor_name,"ov8825")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"ov8858_cm9554")
+	||!strcmp(s_ctrl->sensordata->sensor_name,"ov8858"))
 	back_camera_pixel_index=PIXEL_INDEX_8MP;//8Mp
 else if(!strcmp(s_ctrl->sensordata->sensor_name,"skuf_ov12830_p12v01c")
 	||!strcmp(s_ctrl->sensordata->sensor_name,"s5k3l1yx")
 	||!strcmp(s_ctrl->sensordata->sensor_name,"imx135"))
 	back_camera_pixel_index=PIXEL_INDEX_12MP;//12Mp
+else if(!strcmp(s_ctrl->sensordata->sensor_name,"ov13850"))
+	back_camera_pixel_index=PIXEL_INDEX_13MP;//13Mp
 }
 else if(s_ctrl->sensordata->sensor_info->position==FRONT_CAMERA_B)
 {
