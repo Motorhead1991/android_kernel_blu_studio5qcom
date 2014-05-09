@@ -708,11 +708,11 @@ static void goodix_ts_work_func(struct work_struct *work)
 		gtp_touch_up(ts, 0);
 	#elif defined(TYQ_TP_THIRD_MENU_1080x1920)
 		if(key_value == 1)
-		gtp_touch_down(ts, 0, 120, 2000, 1);
+		gtp_touch_down(ts, 0, 120, 2070, 1);
 	else if (key_value == 2)
-		gtp_touch_down(ts, 0, 350, 2000, 1);
+		gtp_touch_down(ts, 0, 540, 2070, 1);
 	else if (key_value == 4)
-		gtp_touch_down(ts, 0, 570, 2000, 1);
+		gtp_touch_down(ts, 0, 940, 2070, 1);
 	else
 		gtp_touch_up(ts, 0);
 	#else
@@ -3225,9 +3225,9 @@ static ssize_t ty_touch_virtual_keys_show(struct kobject *kobj,
 		   "\n");
 #elif defined(TYQ_TP_THIRD_MENU_1080x1920)
 		return snprintf(buf, 200,
-			__stringify(EV_KEY) ":" __stringify(KEY_MENU) ":120:2000:100:80"
-		   ":" __stringify(EV_KEY) ":" __stringify(KEY_HOMEPAGE) ":350:2000:100:80"
-		   ":" __stringify(EV_KEY) ":" __stringify(KEY_BACK) ":570:2000:100:80" 			   
+			__stringify(EV_KEY) ":" __stringify(KEY_MENU) ":120:2070:100:80"
+		   ":" __stringify(EV_KEY) ":" __stringify(KEY_HOMEPAGE) ":540:2070:100:80"
+		   ":" __stringify(EV_KEY) ":" __stringify(KEY_BACK) ":940:2070:100:80" 			   
 		   "\n");
 #else
 		return snprintf(buf, 200,
