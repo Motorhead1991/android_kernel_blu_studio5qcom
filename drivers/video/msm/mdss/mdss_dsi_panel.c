@@ -140,7 +140,9 @@ static void mdss_dsi_panel_bklt_dcs(struct mdss_dsi_ctrl_pdata *ctrl, int level)
 	struct dcs_cmd_req cmdreq;
 
 	pr_debug("%s: level=%d\n", __func__, level);
-
+#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
+	return;
+#endif
 	led_pwm1[1] = (unsigned char)level;
 
 	memset(&cmdreq, 0, sizeof(cmdreq));
@@ -152,10 +154,16 @@ static void mdss_dsi_panel_bklt_dcs(struct mdss_dsi_ctrl_pdata *ctrl, int level)
 
 	mdss_dsi_cmdlist_put(ctrl, &cmdreq);
 }
-
+#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
+	static unsigned bl_en_gpio = 109;
+#endif
 static int mdss_dsi_request_gpios(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 {
 	int rc = 0;
+	
+#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
+	gpio_request(bl_en_gpio,"bl_enable");
+#endif
 
 	if (gpio_is_valid(ctrl_pdata->disp_en_gpio)) {
 		rc = gpio_request(ctrl_pdata->disp_en_gpio,
@@ -226,6 +234,10 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 			return rc;
 		}
 		if (!pinfo->panel_power_on) {
+#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
+	gpio_set_value(bl_en_gpio, 1);
+#endif
+			
 			if (gpio_is_valid(ctrl_pdata->disp_en_gpio))
 				gpio_set_value((ctrl_pdata->disp_en_gpio), 1);
 
@@ -251,6 +263,10 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 			pr_debug("%s: Reset panel done\n", __func__);
 		}
 	} else {
+#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
+	gpio_set_value(bl_en_gpio, 0);
+	gpio_free(bl_en_gpio);
+#endif
 		if (gpio_is_valid(ctrl_pdata->disp_en_gpio)) {
 			gpio_set_value((ctrl_pdata->disp_en_gpio), 0);
 			gpio_free(ctrl_pdata->disp_en_gpio);

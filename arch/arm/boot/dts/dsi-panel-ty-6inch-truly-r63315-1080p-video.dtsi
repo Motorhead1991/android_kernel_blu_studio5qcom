@@ -60,6 +60,8 @@
 			29 01 00 00 00 00 08 D5 06 00 00 01 2c 01 2c
 			29 01 00 00 00 00 1F C7 00 0f 17 20 2e 3c 46 55 3a 42 4e 5f 63 6d 7f 00 0f 17 20 2e 3c 46 55 3a 42 4e 5f 63 6d 7f
  			29 01 00 00 00 00 14 C8 00 00 00 00 00 FC 00 00 00 00 00 FC 00 00 00 00 00 FC 00
+ 			39 01 00 00 00 00 02 53 24
+			39 01 00 00 00 00 02 51 80
 			05 01 00 00 78 00 02 29 00
 			05 01 00 00 78 00 02 11 00];
 
@@ -79,38 +81,16 @@
 		qcom,mdss-dsi-panel-timings = [65 3E 34 00 55 52 33 40 50 03 04 00];
 		qcom,mdss-dsi-t-clk-post = <0x1e>;
 		qcom,mdss-dsi-t-clk-pre = <0x3f>;
-//
-//        qcom,platform-enable-gpio = <&msmgpio 108 0>;
-/*
-		qcom,mdss-dsi-bl-min-level = <1>;
-		qcom,mdss-dsi-bl-max-level = <255>;
-		qcom,mdss-dsi-bl-pmic-pwm-frequency = <100>;
-		qcom,mdss-dsi-bl-pmic-bank-select = <7>;
-		qcom,mdss-dsi-dma-trigger = "trigger_sw";
-		qcom,mdss-dsi-mdp-trigger = "none";
 
-*/
-
-/*mpp4
-		qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_pwm";
-        qcom,mdss-dsi-bl-pmic-pwm-frequency = <1000>;
-        qcom,mdss-dsi-pwm-gpio = <&pm8226_mpps 4 0>;
-        qcom,mdss-dsi-bl-pmic-bank-select = <3>; //lpg4  
-
-		qcom,mdss-dsi-reset-sequence = <1 20>, <0 1>, <1 20>;
-		qcom,mdss-dsi-bl-min-level = <0>;
-		qcom,mdss-dsi-bl-max-level = <255>;
-*/
-/*mpp6*/
-	 qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_pwm";
+	 qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_dcs";
+	 /*
         qcom,mdss-dsi-bl-pmic-pwm-frequency = <1000>;
         qcom,mdss-dsi-pwm-gpio = <&pm8226_mpps 6 0>;
-        qcom,mdss-dsi-bl-pmic-bank-select = <5>; //lpg6  
+        qcom,mdss-dsi-bl-pmic-bank-select = <5>; //lpg6  */
 
 		qcom,mdss-dsi-reset-sequence = <1 20>, <0 1>, <1 20>;
 		qcom,mdss-dsi-bl-min-level = <1>;
 		qcom,mdss-dsi-bl-max-level = <255>;
-/**/
 
 	};
 };

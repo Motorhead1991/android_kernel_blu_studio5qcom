@@ -74,6 +74,22 @@
 /*mpp6 as pwm output--msm-pm8226.dtsi*/
 &spmi_bus {
 	qcom,pm8226@0 {
+		qcom,leds@a100 {
+			status = "okay";
+			qcom,led_mpp_2 {
+				label = "mpp";
+				linux,name = "button-backlight";
+				linux,default-trigger = "none";
+				qcom,default-state = "off";
+				qcom,max-current = <40>;
+				qcom,current-setting = <5>;
+				qcom,id = <6>;
+				qcom,mode = "manual";
+				qcom,source-sel = <1>;
+				qcom,mode-ctrl = <0x60>;
+				};
+			};
+/*
 		pm8226_mpps: mpps {
 			mpp@a500 {
 			reg = <0xa500 0x100>;
@@ -85,10 +101,10 @@
 		       qcom,pin-num = <6>;
 		       qcom,master-en = <1>;
 			};
-         };
+         };*/
      };
 };
-/*gpio108 as pwm enable--msm8226-mdss.dtsi*/
+/*gpio108 as lcd enable--msm8226-mdss.dtsi*/
 &soc {
 	mdss_dsi0: qcom,mdss_dsi@fd922800 {
         qcom,platform-enable-gpio = <&msmgpio 108 0>;//niuli add for 108

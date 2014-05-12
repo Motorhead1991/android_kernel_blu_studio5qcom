@@ -248,6 +248,15 @@ static struct gpiomux_setting lcd_rst_sus_cfg = {
 };
 
 static struct msm_gpiomux_config msm_lcd_configs[] __initdata = {
+#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)	
+	{
+		.gpio = 109,		/*backlight En Reset */
+		.settings = {
+			[GPIOMUX_ACTIVE]    = &lcd_rst_act_cfg,
+			[GPIOMUX_SUSPENDED] = &lcd_rst_sus_cfg,
+		},
+	},
+#endif	
 	{
 		.gpio = 25,		/* LCD Reset */
 		.settings = {
