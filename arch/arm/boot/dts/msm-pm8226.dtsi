@@ -865,7 +865,10 @@
 						"flash0_trigger";
 				qcom,id = <1>;
 				linux,name = "led:flash_0";
-				qcom,current = <625>;
+//TYRD wuchx modify for flash current 0.9A(only for ov13850) begin
+				//qcom,current = <625>;
+				qcom,current = <825>;
+//TYRD wuchx modify for flash current 0.9A(only for ov13850) end
 			};
 
 			pm8226_torch: qcom,flash_torch {

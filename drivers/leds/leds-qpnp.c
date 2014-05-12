@@ -921,6 +921,9 @@ static int qpnp_flash_set(struct qpnp_led_data *led)
 {
 	int rc, error;
 	int val = led->cdev.brightness;
+	/*TYRD wuchx modify for flash current 0.9A(only for ov13850) begin */
+	u8	duration;
+	/*TYRD wuchx modify for flash current 0.9A(only for ov13850) end */
 
 	if (led->flash_cfg->torch_enable)
 		led->flash_cfg->current_prgm =
@@ -1037,12 +1040,27 @@ static int qpnp_flash_set(struct qpnp_led_data *led)
 					rc);
 				goto error_flash_set;
 			}
-
+			/*TYRD wuchx modify for flash current 0.9A(only for ov13850) begin */
+			//Flash High max time:450ms
+			if( led->cdev.brightness > 650)
+				duration =  (u8) ((450 - 10) / 10);
+			//Flash Low max time:1280ms or dts specifid
+			else
+				duration = led->flash_cfg->duration;
+			printk("--->torch_mode = %d brightness = %d,duration = 0x%x\n",
+				led->flash_cfg->torch_enable,led->cdev.brightness,duration);
+			rc = qpnp_led_masked_write(led,
+				FLASH_SAFETY_TIMER(led->base),
+				FLASH_SAFETY_TIMER_MASK,
+				duration);
 			/* Set flash safety timer */
+			#if 0
 			rc = qpnp_led_masked_write(led,
 				FLASH_SAFETY_TIMER(led->base),
 				FLASH_SAFETY_TIMER_MASK,
 				led->flash_cfg->duration);
+			#endif
+			/*TYRD wuchx modify for flash current 0.9A(only for ov13850) end */
 			if (rc) {
 				dev_err(&led->spmi_dev->dev,
 					"Safety timer reg write failed(%d)\n",
