@@ -2682,14 +2682,16 @@ static void create_touchscreen_identification_sysfs(void)
 #endif
 #if TY_TP_IOCTRL
 #if 1
-struct ty_touch_fmupgrade_S
+/*TYDRV:liujie modifty this struct 20140516*/
+typedef struct ty_touch_fmupgrade_S
 {
-	unsigned long touchType;
+	unsigned int touchType;
 	unsigned long ulCRC;
   	unsigned long ulReserved;
   	unsigned long bufLength;
-  	void* 		bufAddr;
-};
+  	void __user *bufAddr;
+}TY_TP_FWS;
+
 
 
 #define	NV_TOUCH_FT
@@ -2749,200 +2751,129 @@ u8 gtp_get_vendor_id(void)
 		vendor_id = sensor_id;
 	return vendor_id;
 }
+
+/*TYDRV: liujie modify this function  20140516*/
 static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long arg)
 {
-	struct ty_touch_fmupgrade_S  bufarg;
+	TY_TP_FWS  bufarg;
 	s32 iret;
 	u8 * pBuf;
 	u8 vendor;
-	//u8  bRet = 0;
-//	u8  u8Ver = 0;
-//	unsigned char project_name[20];
-        unsigned long  ulVer = 0;
+	unsigned long  ulVer = 0;
+	TY_TP_FWS __user *argp = (TY_TP_FWS __user *)arg;
 	
-	if (!arg)
+	if (!argp)
 	{
 		printk("%s:arg not exist.\n",__func__);
 		return -EFAULT;
 	}
 	
-	if (copy_from_user(&bufarg, (void *) arg, sizeof(bufarg))) 
+	if (copy_from_user(&bufarg, argp, sizeof(bufarg)))
 	{
 		printk("%s:null pointer.\n",__func__);
 		return -EFAULT;
 	}
 
-	printk("%s:cmd=0x%x.\n",__func__,cmd);
+	pr_info("enson_%s:getver.\n",__func__);
+	if (NULL == bufarg.bufAddr)
+	{
+		printk("%s:bufAddr null pointer.\n",__func__);
+		return -EFAULT;
+	}
+	printk("enson_%s:cmd=0x%x.\n",__func__,cmd);
 	
 	switch (cmd) 
 	{
 		#if 1
 		case TYN_TOUCH_FWVER:
-			pr_info("%s:getver.\n",__func__);
-			if (NULL == bufarg.bufAddr)
-			{
-				printk("%s:bufAddr null pointer.\n",__func__);
-				return -EFAULT;
-			}
-			pr_info("%s:getver 1.\n",__func__);
-			
-			if ((0>= bufarg.bufLength )||( sizeof(unsigned long) < bufarg.bufLength ))
+			if(sizeof(unsigned long)!=bufarg.bufLength)
 			{
 				printk("%s:bufLength null pointer.\n",__func__);
 				return -EFAULT;
-			}			
-			pr_info("%s:lenth=%ld,addr=0x%x\n",__func__,bufarg.bufLength,(int)(bufarg.bufAddr));
-			pr_info("%s:getver 2\n",__func__);
-			
-			pBuf = kzalloc(bufarg.bufLength, GFP_KERNEL);
-			if (0 == pBuf)
-			{
-				printk("%s:alloc buffer failed.\n",__func__);
-				return 0;
 			}
-
-			if (copy_from_user(pBuf, (void *)bufarg.bufAddr, bufarg.bufLength)) 
-			{
-				printk("%s:get buffer error.\n",__func__);
-				return -EFAULT;
-			}
-			pr_info("%s:getver 3.\n",__func__);
-
-			
-			ulVer = 0;
 			
 			//get firmware version
 	#if defined(NV_TOUCH_FT)
 			ulVer =touch_GetFWVer();
 			if(0 > ulVer) 
 			{
-				*(unsigned long*)bufarg.bufAddr = 0;
+				ulVer = 0;
+				if(copy_to_user(bufarg.bufAddr,&ulVer,sizeof(ulVer)))
+				{
+					printk("%s:get buffer error.\n",__func__);
+					return -EAGAIN;
+				}
 				pr_err("%s:FT_GetFWVer failed. \n",__func__);
-				kfree(pBuf);
 				return -EFAULT;
 			}
 	#endif
-
-			*(( unsigned long*)bufarg.bufAddr) = ulVer;
-			
-			pr_info("%s:ver=0x%x \n",__func__,*(u8*)bufarg.bufAddr);
-			if( pBuf ) kfree(pBuf);
-			
-			break;
-
-			case TYN_TOUCH_CFGVER:
-			pr_info("%s:getver.\n",__func__);
-			if (NULL == bufarg.bufAddr)
-			{
-				printk("%s:bufAddr null pointer.\n",__func__);
-				return -EFAULT;
-			}
-			pr_info("%s:getver 1.\n",__func__);
-			
-			if ((0>= bufarg.bufLength )||( sizeof(unsigned long) < bufarg.bufLength ))
-			{
-				printk("%s:bufLength null pointer.\n",__func__);
-				return -EFAULT;
-			}			
-			pr_info("%s:lenth=%ld,addr=0x%x\n",__func__,bufarg.bufLength,(int)(bufarg.bufAddr));
-			pr_info("%s:getver 2\n",__func__);
-			
-			pBuf = kzalloc(bufarg.bufLength, GFP_KERNEL);
-			if (0 == pBuf)
-			{
-				printk("%s:alloc buffer failed.\n",__func__);
-				return 0;
-			}
-
-			if (copy_from_user(pBuf, (void *)bufarg.bufAddr, bufarg.bufLength)) 
-			{
-				printk("%s:get buffer error.\n",__func__);
-				return -EFAULT;
-			}
-			pr_info("%s:getver 3.\n",__func__);
-
-			
-			ulVer = 0;
-			
-			//get firmware version
-	#if defined(NV_TOUCH_FT)
-			ulVer =touch_GetCFGVer();
-			if(0 > ulVer) 
-			{
-				*(unsigned long*)bufarg.bufAddr = 0;
-				pr_err("%s:FT_GetFWVer failed. \n",__func__);
-				kfree(pBuf);
-				return -EFAULT;
-			}
-	#endif
-
-			*(( unsigned long*)bufarg.bufAddr) = ulVer;
-			
-			pr_info("%s:ver=0x%x \n",__func__,*(u8*)bufarg.bufAddr);
-			if( pBuf ) kfree(pBuf);
-			
-			break;
-		#endif	
-		case TYN_TOUCH_IC_TYPE:
-			printk("%s:getver.\n",__func__);
-			if (NULL == bufarg.bufAddr)
-			{
-				printk("%s:bufAddr null pointer.\n",__func__);
-				return -EFAULT;
-			}
-			printk("%s:getver 1.\n",__func__);
-			
-			if ((0>= bufarg.bufLength )||( sizeof(unsigned long) < bufarg.bufLength ))
-			{
-				printk("%s:bufLength null pointer.\n",__func__);
-				return -EFAULT;
-			}			
-			//printk("%s:lenth=%x,addr=0x%x\n",__func__,(unsigned int)bufarg.bufLength,(bufarg.bufAddr));
-			printk("%s:get tp ic type 2\n",__func__);
-			
-			pBuf = kzalloc(bufarg.bufLength, GFP_KERNEL);
-			if (0 == pBuf)
-			{
-				printk("%s:alloc buffer failed.\n",__func__);
-				return 0;
-			}
-
-			if (copy_from_user(pBuf, (void *)bufarg.bufAddr, bufarg.bufLength)) 
-			{
-				printk("%s:get buffer error.\n",__func__);
-				return -EFAULT;
-			}
-
-			*(( unsigned long *)bufarg.bufAddr) = GOODIX_TP_ID;
-			
-			//printk("%s:ver=0x%x \n",__func__,*(unsigned long*)bufarg.bufAddr);
-			if( pBuf ) kfree(pBuf);
-			
-			break;
-		case TYN_TOUCH_FMUPGRADE:
-			if (NULL == bufarg.bufAddr)
-			{
-				printk("%s:null pointer.\n",__func__);
-				return 0;
-			}
-			
-			pBuf = kzalloc(bufarg.bufLength, GFP_KERNEL);
-			if (0 == pBuf)
-			{
-				printk("%s:alloc buffer failed.\n",__func__);
-				return 0;
-			}
-			
-			if (copy_from_user(pBuf, (void *) bufarg.bufAddr, bufarg.bufLength)) 
+			if(copy_to_user(bufarg.bufAddr,&ulVer,sizeof(ulVer)))
 			{
 				printk("%s:get buffer error.\n",__func__);
 				return -EAGAIN;
 			}
-
-			//get crc and check crc 	  
+			pr_info("enson_%s:ver=0x%lx \n",__func__,ulVer);
 			
-			//printk("type=0x%x,len=%ld \n",bufarg.touchType,bufarg.bufLength);
-			//printk("ver=0x%x,0x%x,0x%x \n",pBuf[bufarg.bufLength-3],pBuf[bufarg.bufLength-2],pBuf[bufarg.bufLength-1]);
+			break;
+
+		case TYN_TOUCH_CFGVER:
+			if (sizeof(unsigned long) != bufarg.bufLength )
+			{
+				printk("%s:bufLength null pointer.\n",__func__);
+				return -EFAULT;
+			}
+			//get firmware cfg version
+	#if defined(NV_TOUCH_FT)
+			ulVer =touch_GetCFGVer();
+			if(0 > ulVer) 
+			{
+				ulVer = 0;
+				if(copy_to_user(bufarg.bufAddr,&ulVer,sizeof(ulVer)))
+				{
+					printk("%s:get buffer error.\n",__func__);
+					return -EAGAIN;
+				}
+				pr_err("%s:FT_GetFWVer failed. \n",__func__);
+				return -EFAULT;
+			}
+	#endif
+			if(copy_to_user(argp->bufAddr,&ulVer,sizeof(ulVer)))
+			{
+				printk("%s:get buffer error.\n",__func__);
+				return -EAGAIN;
+			}
+			pr_info("enson_%s:ver=0x%lx \n",__func__,ulVer);
+			
+			break;
+		#endif	
+		case TYN_TOUCH_IC_TYPE:
+			if (sizeof(unsigned long) != bufarg.bufLength )
+			{
+				printk("%s:bufLength null pointer.\n",__func__);
+				return -EFAULT;
+			}			
+			ulVer = GOODIX_TP_ID;
+			if(copy_to_user(bufarg.bufAddr,&ulVer,sizeof(ulVer)))
+			{
+				printk("%s:get buffer error.\n",__func__);
+				return -EAGAIN;
+			}
+			pr_info("enson_%s:ver=0x%lx \n",__func__,ulVer);
+			
+			break;
+		case TYN_TOUCH_FMUPGRADE:
+			pBuf = kzalloc(bufarg.bufLength, GFP_KERNEL);
+			if(NULL == pBuf)
+			{
+				printk("%s:alloc buffer failed.\n",__func__);
+				return 0;
+			}
+			
+			if (copy_from_user(pBuf, bufarg.bufAddr, bufarg.bufLength)) 
+			{
+				printk("%s:get buffer error.\n",__func__);
+				return -EAGAIN;
+			}
 			
      #if defined(NV_TOUCH_FT)
 			if( TYN_TOUCH_FOCALTECH == bufarg.touchType)
@@ -2964,12 +2895,6 @@ static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long
 			break;
 			
 		case TYN_TOUCH_CONFIG_UPGRADE :
-			if (NULL == bufarg.bufAddr)
-			{
-				printk("%s:null pointer.\n",__func__);
-				return 0;
-			}
-			
 			pBuf = kzalloc(bufarg.bufLength, GFP_KERNEL);
 			if (0 == pBuf)
 			{
@@ -2977,17 +2902,12 @@ static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long
 				return 0;
 			}
 			
-			if (copy_from_user(pBuf, (void *) bufarg.bufAddr, bufarg.bufLength)) 
+			if (copy_from_user(pBuf, bufarg.bufAddr, bufarg.bufLength)) 
 			{
 				printk("%s:get buffer error.\n",__func__);
 				return -EAGAIN;
 			}
-
-			//get crc and check crc 	  
-			
-			//printk("type=0x%x,len=%ld \n",bufarg.touchType,bufarg.bufLength);
-			//printk("ver=0x%x,0x%x,0x%x \n",pBuf[bufarg.bufLength-3],pBuf[bufarg.bufLength-2],pBuf[bufarg.bufLength-1]);
-			
+		
      #if defined(NV_TOUCH_FT)
 			if( TYN_TOUCH_FOCALTECH == bufarg.touchType)
 			{
@@ -3086,6 +3006,7 @@ static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long
 	
 	return 0;
 }
+
 #endif
 static int touch_ctrl_open(struct inode *inode, struct file *filp) 
 { 
