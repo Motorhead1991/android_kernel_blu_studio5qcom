@@ -37,6 +37,24 @@ void mdss_dsi_panel_pwm_cfg(struct mdss_dsi_ctrl_pdata *ctrl)
 	}
 }
 
+/*niuli for dcs bl ctrl*/
+#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
+void mdss_dsi_panel_dcs_cfg(struct mdss_dsi_ctrl_pdata *ctrl)
+{
+		u32 data;
+
+		data = 0;
+		data = MIPI_INP(ctrl->ctrl_base + 0x00AC);
+		data |= BIT(28);
+		MIPI_OUTP(ctrl->ctrl_base + 0x00AC, data);
+		data = 0;
+		data = MIPI_INP((ctrl->ctrl_base) + 0x0010);
+		data |= BIT(12);
+		MIPI_OUTP((ctrl->ctrl_base) + 0x0010, data);
+		
+		pr_err("%s: ctrl->ctrl_base = %x \n", __func__,((int)ctrl->ctrl_base));
+}
+#endif
 static void mdss_dsi_panel_bklt_pwm(struct mdss_dsi_ctrl_pdata *ctrl, int level)
 {
 	int ret;
@@ -140,9 +158,6 @@ static void mdss_dsi_panel_bklt_dcs(struct mdss_dsi_ctrl_pdata *ctrl, int level)
 	struct dcs_cmd_req cmdreq;
 
 	pr_debug("%s: level=%d\n", __func__, level);
-#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
-	return;
-#endif
 	led_pwm1[1] = (unsigned char)level;
 
 	memset(&cmdreq, 0, sizeof(cmdreq));
@@ -410,6 +425,10 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 
 	pr_debug("%s: ctrl=%p ndx=%d\n", __func__, ctrl, ctrl->ndx);
 
+/*niuli for dcs bl ctrl*/
+#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
+	mdss_dsi_panel_dcs_cfg(ctrl);
+#endif
 	if (ctrl->on_cmds.cmd_cnt)
 		mdss_dsi_panel_cmds_send(ctrl, &ctrl->on_cmds);
 
@@ -460,7 +479,7 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 	if (ctrl->off_cmds.cmd_cnt)
 		mdss_dsi_panel_cmds_send(ctrl, &ctrl->off_cmds);
 /*TYRD wuxh add begin for ssd lcd on 20140123*/
-	
+
 	if(ctrl->off_cmds.link_state ==DSI_HS_MODE)
 	{
 		data =0;

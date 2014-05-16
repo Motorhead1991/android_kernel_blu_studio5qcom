@@ -60,17 +60,17 @@
 			29 01 00 00 00 00 08 D5 06 00 00 01 2c 01 2c
 			29 01 00 00 00 00 1F C7 00 0f 17 20 2e 3c 46 55 3a 42 4e 5f 63 6d 7f 00 0f 17 20 2e 3c 46 55 3a 42 4e 5f 63 6d 7f
  			29 01 00 00 00 00 14 C8 00 00 00 00 00 FC 00 00 00 00 00 FC 00 00 00 00 00 FC 00
- 			39 01 00 00 00 00 02 53 24
-			39 01 00 00 00 00 02 51 80
+ 			39 01 00 00 00 00 02 53 2c
 			05 01 00 00 78 00 02 29 00
 			05 01 00 00 78 00 02 11 00];
 
 		qcom,mdss-dsi-off-command = [05 01 00 00 32 00 02 28 00
 					05 01 00 00 78 00 02 10 00];
 
-		qcom,mdss-dsi-on-command-state = "dsi_lp_mode";
+		qcom,mdss-dsi-on-command-state = "dsi_hs_mode";
 		qcom,mdss-dsi-off-command-state = "dsi_hs_mode";
-		qcom,mdss-dsi-h-sync-pulse = <0>;
+		qcom,mdss-dsi-h-sync-pulse = <1>;
+		qcom,mdss-dsi-bllp-power-mode;
 		qcom,mdss-dsi-traffic-mode = "non_burst_sync_event";
 		qcom,mdss-dsi-lane-map = "lane_map_0123";
 		qcom,mdss-dsi-bllp-eof-power-mode;
