@@ -213,9 +213,9 @@ struct ft5x06_ts_data {
 static int fts_creat_virtual_key_sysfs(void);
 #endif
 #endif
-#if defined(CONFIG_TOUCHSCREEN_FT5X06) && defined(CONFIG_TY_TOUCHSCREEN_MSTAR) 
- unsigned char ft_probe_flag = 0;
-#endif
+/*TYDRV:liujie remove the macro restriction 20140519*/
+unsigned char ft_probe_flag = 0;
+
 #if defined (TYQ_FOCALTECH_TP_CHARGEING_INTERFERENCE)
  char tp_usb_charge_flag = 0;
  char is_tp_resum = 1;
@@ -1590,12 +1590,9 @@ static int ft5x06_ts_probe(struct i2c_client *client,
 		dev_err(&client->dev, "version read failed");
 		goto free_reset_gpio;
 	}
-	/* lichm merge begin */
-	#if defined(CONFIG_TOUCHSCREEN_FT5X06) && defined(CONFIG_TY_TOUCHSCREEN_MSTAR) 
-	 ft_probe_flag = 1;
-	printk("FocalTech tp detected successfully\n");
-	#endif
-	/* lichm merge end */
+	/*TYDRV:liujie remove the macro limit 20140519*/
+	ft_probe_flag = 1;
+
 
 	dev_info(&client->dev, "Device ID = 0x%x\n", reg_value);
 
