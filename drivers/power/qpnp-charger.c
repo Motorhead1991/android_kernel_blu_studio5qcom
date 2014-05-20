@@ -386,8 +386,12 @@ struct qpnp_chg_chip {
 	spinlock_t			usbin_health_monitor_lock;
 	struct mutex			batfet_vreg_lock;
 	/*TYDRV:liujie add for charge interference 20140516*/
+#if defined(CONFIG_TOUCHSCREEN_FT5X06)
+#if defined (TYQ_FOCALTECH_TP_CHARGEING_INTERFERENCE)
 	struct work_struct		ft_charge_interference_work;
-	struct mutex            ft_charge_lock;
+	//struct mutex            ft_charge_lock;
+#endif
+#endif
 	struct alarm			reduce_power_stage_alarm;
 	struct work_struct		reduce_power_stage_work;
 	bool				power_stage_workaround_running;
@@ -3967,7 +3971,7 @@ focaltech_charge_interference_work(struct work_struct *work)
 	struct qpnp_chg_chip *chip = container_of(work,
 				struct qpnp_chg_chip, ft_charge_interference_work);
 
-	mutex_lock(&chip->ft_charge_lock);
+	//mutex_lock(&chip->ft_charge_lock);
 	if(ft_probe_flag ==1){
 		if(chip->usb_present == 0){
 			tp_usb_charge_flag = 0;
@@ -3980,7 +3984,7 @@ focaltech_charge_interference_work(struct work_struct *work)
 				fts_ctpm_charge_mode(1);
 		}
 	}
-	mutex_unlock(&chip->ft_charge_lock);
+	//mutex_unlock(&chip->ft_charge_lock);
 }
 
 #endif
@@ -5003,7 +5007,7 @@ qpnp_charger_probe(struct spmi_device *spmi)
 	/*TYDRV:liujie add for charge interference 20140516*/
 #if defined(CONFIG_TOUCHSCREEN_FT5X06)
 #if defined (TYQ_FOCALTECH_TP_CHARGEING_INTERFERENCE)
-	mutex_init(&chip->ft_charge_lock);
+	//mutex_init(&chip->ft_charge_lock);
 	INIT_WORK(&chip->ft_charge_interference_work,
 			focaltech_charge_interference_work);
 #endif
@@ -5386,7 +5390,7 @@ qpnp_charger_remove(struct spmi_device *spmi)
 #if defined(CONFIG_TOUCHSCREEN_FT5X06)
 #if defined (TYQ_FOCALTECH_TP_CHARGEING_INTERFERENCE)
 	cancel_work_sync(&chip->ft_charge_interference_work);
-	mutex_destroy(&chip->ft_charge_lock);
+	//mutex_destroy(&chip->ft_charge_lock);
 #endif
 #endif
 

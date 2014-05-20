@@ -598,7 +598,11 @@ static int ft5x06_ts_resume(struct device *dev)
 	msleep(data->pdata->soft_rst_dly);
 	#if defined (TYQ_FOCALTECH_TP_CHARGEING_INTERFERENCE)
 	is_tp_resum = 1;
-	fts_ctpm_charge_mode(tp_usb_charge_flag);
+	/*TYDRV:add by liujie .only then the flag is 1,then we wirte it*/
+	if(tp_usb_charge_flag)
+	{
+		fts_ctpm_charge_mode(tp_usb_charge_flag);
+	}
 	#endif
 	enable_irq(data->client->irq);
 
