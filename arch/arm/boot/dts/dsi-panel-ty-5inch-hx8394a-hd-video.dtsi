@@ -32,7 +32,7 @@
 		qcom,mdss-dsi-h-back-porch = <80>;
 		qcom,mdss-dsi-h-pulse-width = <60>;
 		qcom,mdss-dsi-h-sync-skew = <0>;
-		qcom,mdss-dsi-v-back-porch = <17>;
+		qcom,mdss-dsi-v-back-porch = <8>;
 		qcom,mdss-dsi-v-front-porch = <121>;
 		qcom,mdss-dsi-v-pulse-width = <2>;
 		qcom,mdss-dsi-h-left-border = <0>;
@@ -51,7 +51,7 @@
 		39 01 00 00 00 00 05 C7 00 10 00 10
               39 01 00 00 00 00 05 BF 06 00 10 04 
 	 	15 01 00 00 00 00 02  CC 09
-	 	39 01 00 00 00 00 2b E0 00 05 08 2B 33 3F 15 36 07 0D 0E 11 12 11 12 10 17 00 05 08 2B 33 3F 15 36 07 0D 0E 11 12 11 12 10 17 0B 17 06 11 0B 17 06 11 
+	 	39 01 00 00 00 00 2b E0 00 01 05 26 2C 3F 10 32 06 0C 0E 12 14 12 13 11 19 00 01 05 26 2C 3F 10 32 06 0C 0E 12 14 12 13 11 19 0A 17 06 12 0A 17 06 12 
 	 	15 01 00 00 00 00 02 B6 09
 	 	15 01 00 00 00 00 02 D4 32
 	 	15 01 00 00 00 00 02 35 00
