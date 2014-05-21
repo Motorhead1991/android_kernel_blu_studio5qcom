@@ -120,6 +120,10 @@ else ifeq (y,$(findstring y,$(filter TYQ_TBT5987_SUPPORT=%,$(TY_CP_OPTION))))
 else ifeq (y,$(findstring y,$(filter TYQ_TBT5988_SUPPORT=%,$(TY_CP_OPTION))))
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-v1-qrd-skug-5988.dtb
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-v2-qrd-skug-5988.dtb
+#TYDRV wang_gj added for 5992 dtb
+else ifeq (y,$(findstring y,$(filter TYQ_TBW5992_SUPPORT=%,$(TY_CP_OPTION))))
+	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-v1-qrd-skug-5992.dtb
+	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-v2-qrd-skug-5992.dtb
 else ifeq (y,$(findstring y,$(filter TYQ_DTS_SUPPORT=%,$(TY_CP_OPTION))))
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-v1-qrd-skug.dtb
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-v2-qrd-skug.dtb

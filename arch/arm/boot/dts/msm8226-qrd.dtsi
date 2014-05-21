@@ -16,6 +16,20 @@
 	serial@f991f000 {
 		status = "ok";
 	};
+	/*wang_gj add for gpio flashlight begin*/
+	flashlight: qcom,leds-gpio-flash{
+        qcom,flash-type = <3>;
+        cell-index = <0>;
+		compatible = "qcom,leds-gpio-flash";
+		status = "okay";
+		qcom,flash-en = <&msmgpio 50 0>;
+		qcom,flash-now = <&msmgpio 66 0>;
+		linux,name = "flashlight";
+		linux,default-trigger = "flashlight-trigger";
+        qcom,current = <255>;
+        qcom,max-current = <255>;
+	};
+	/*wang_gj add for gpio flashlight end*/
 
         i2c@f9925000 { /* BLSP1 QUP3 */
                 nfc-nci@0e {
