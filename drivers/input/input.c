@@ -1575,9 +1575,13 @@ void input_reset_device(struct input_dev *dev)
 		 * to be still pressed when we resume.
 		 */
 		if (!test_bit(INPUT_PROP_NO_DUMMY_RELEASE, dev->propbit)) {
+/*niuli add for long press*/
+//do not release key when resume to solve long press button issues
+ #if 0		 
 			spin_lock_irq(&dev->event_lock);
 			input_dev_release_keys(dev);
 			spin_unlock_irq(&dev->event_lock);
+ #endif
 		}
 	}
 

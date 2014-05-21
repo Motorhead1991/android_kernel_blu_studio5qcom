@@ -217,6 +217,10 @@ static void wcd9xxx_pause_hs_polling(struct wcd9xxx_mbhc *mbhc)
 /* called under codec_resource_lock acquisition */
 static void wcd9xxx_start_hs_polling(struct wcd9xxx_mbhc *mbhc)
 {
+    /*niuli add for long press*/
+	#if 0
+	s16 v_brh, v_b1_hu;
+	#endif
 	struct snd_soc_codec *codec = mbhc->codec;
 	int mbhc_state = mbhc->mbhc_state;
 
@@ -257,6 +261,20 @@ static void wcd9xxx_start_hs_polling(struct wcd9xxx_mbhc *mbhc)
 		/* set to max */
 		snd_soc_write(codec, WCD9XXX_A_CDC_MBHC_VOLT_B6_CTL, 0x7F);
 		snd_soc_write(codec, WCD9XXX_A_CDC_MBHC_VOLT_B5_CTL, 0xFF);
+
+		/*niuli add for long press*/
+		#if 0
+		v_brh = wcd9xxx_get_current_v(mbhc, WCD9XXX_CURRENT_V_BR_H);
+		snd_soc_write(codec, WCD9XXX_A_CDC_MBHC_VOLT_B10_CTL,
+			      (v_brh >> 8) & 0xFF);
+		snd_soc_write(codec, WCD9XXX_A_CDC_MBHC_VOLT_B9_CTL,
+			      v_brh & 0xFF);
+		v_b1_hu = wcd9xxx_get_current_v(mbhc, WCD9XXX_CURRENT_V_B1_HU);
+		snd_soc_write(codec, WCD9XXX_A_CDC_MBHC_VOLT_B3_CTL,
+			      v_b1_hu & 0xFF);
+		snd_soc_write(codec, WCD9XXX_A_CDC_MBHC_VOLT_B4_CTL,
+			      (v_b1_hu >> 8) & 0xFF);
+		#endif
 	}
 
 	snd_soc_write(codec, WCD9XXX_A_CDC_MBHC_EN_CTL, 0x1);
@@ -317,8 +335,10 @@ static bool __wcd9xxx_switch_micbias(struct wcd9xxx_mbhc *mbhc,
 			snd_soc_write(codec, WCD9XXX_A_CDC_MBHC_VOLT_B2_CTL,
 				      (d->v_ins_hu[MBHC_V_IDX_VDDIO] >> 8) &
 				      0xFF);
-
+			/*niuli add for long press*/
+			#if 1
 			if (mbhc->mbhc_state != MBHC_STATE_POTENTIAL_RECOVERY) {
+			#endif
 				/* Threshods for button press */
 				snd_soc_write(codec,
 					WCD9XXX_A_CDC_MBHC_VOLT_B3_CTL,
@@ -342,7 +362,10 @@ static bool __wcd9xxx_switch_micbias(struct wcd9xxx_mbhc *mbhc,
 					WCD9XXX_A_CDC_MBHC_VOLT_B10_CTL,
 					(d->v_brh[MBHC_V_IDX_VDDIO] >> 8) &
 					0xFF);
+			/*niuli add for long press*/
+			#if 1
 			}
+			#endif
 			pr_debug("%s: Programmed MBHC thresholds to VDDIO\n",
 				 __func__);
 		}
@@ -378,7 +401,10 @@ static bool __wcd9xxx_switch_micbias(struct wcd9xxx_mbhc *mbhc,
 			snd_soc_write(codec, WCD9XXX_A_CDC_MBHC_VOLT_B2_CTL,
 					(d->v_ins_hu[MBHC_V_IDX_CFILT] >> 8) &
 					0xFF);
+			/*niuli add for long press*/
+			#if 1
 			if (mbhc->mbhc_state != MBHC_STATE_POTENTIAL_RECOVERY) {
+			#endif
 				/* Revert threshods for button press */
 				snd_soc_write(codec,
 					WCD9XXX_A_CDC_MBHC_VOLT_B3_CTL,
@@ -402,7 +428,10 @@ static bool __wcd9xxx_switch_micbias(struct wcd9xxx_mbhc *mbhc,
 					WCD9XXX_A_CDC_MBHC_VOLT_B10_CTL,
 					(d->v_brh[MBHC_V_IDX_CFILT] >> 8) &
 					0xFF);
+			/*niuli add for long press*/
+			#if 1
 			}
+			#endif
 			pr_debug("%s: Programmed MBHC thresholds to MICBIAS\n",
 					__func__);
 		}
@@ -500,8 +529,10 @@ static void wcd9xxx_calibrate_hs_polling(struct wcd9xxx_mbhc *mbhc)
 	snd_soc_write(codec, WCD9XXX_A_CDC_MBHC_VOLT_B1_CTL, v_ins_hu & 0xFF);
 	snd_soc_write(codec, WCD9XXX_A_CDC_MBHC_VOLT_B2_CTL,
 		      (v_ins_hu >> 8) & 0xFF);
-
+	/*niuli add for long press*/
+	#if 1
 	if (mbhc->mbhc_state != MBHC_STATE_POTENTIAL_RECOVERY) {
+	#endif
 		snd_soc_write(codec, WCD9XXX_A_CDC_MBHC_VOLT_B3_CTL, v_b1_hu &
 				0xFF);
 		snd_soc_write(codec, WCD9XXX_A_CDC_MBHC_VOLT_B4_CTL,
@@ -518,7 +549,10 @@ static void wcd9xxx_calibrate_hs_polling(struct wcd9xxx_mbhc *mbhc)
 				mbhc->mbhc_data.v_brl & 0xFF);
 		snd_soc_write(codec, WCD9XXX_A_CDC_MBHC_VOLT_B12_CTL,
 				(mbhc->mbhc_data.v_brl >> 8) & 0xFF);
+	/*niuli add for long press*/
+	#if 1
 	}
+	#endif
 }
 
 static void wcd9xxx_codec_switch_cfilt_mode(struct wcd9xxx_mbhc *mbhc,
@@ -3456,7 +3490,10 @@ static int wcd9xxx_update_rel_threshold(struct wcd9xxx_mbhc *mbhc, int ceilmv,
 		mv = scale_v_micb_vddio(mbhc, mv, true);
 	pr_debug("%s: reprogram vb1hu/vbrh to %dmv\n", __func__, mv);
 
+	/*niuli add for long press*/
+	#if 1
 	if (mbhc->mbhc_state != MBHC_STATE_POTENTIAL_RECOVERY) {
+	#endif
 		/*
 		 * update LSB first so mbhc hardware block
 		 * doesn't see too low value.
@@ -3471,7 +3508,10 @@ static int wcd9xxx_update_rel_threshold(struct wcd9xxx_mbhc *mbhc, int ceilmv,
 				0xFF);
 		snd_soc_write(codec, WCD9XXX_A_CDC_MBHC_VOLT_B10_CTL,
 				(v_brh >> 8) & 0xFF);
+	/*niuli add for long press*/
+	#if 1
 	}
+	#endif
 	return 0;
 }
 
