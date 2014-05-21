@@ -110,7 +110,7 @@ struct bcm2079x_dev {
 #endif
 
 };
-#if 1 //def KT_ADAPTIVE
+#if 0 //def KT_ADAPTIVE
 static int nfcc_hw_check(struct i2c_client *client, unsigned short curr_addr);
 #endif
 
@@ -493,7 +493,7 @@ static int nfc_parse_dt(struct device *dev, struct bcm2079x_platform_data *pdata
 		return -EINVAL;
 	return r;
 }
-#if 1
+#if 0
 static int nfcc_hw_check(struct i2c_client *client, unsigned short curr_addr)
 {
 	int r = 0;
@@ -541,7 +541,7 @@ static int bcm2079x_probe(struct i2c_client *client,
 	#endif
 	struct bcm2079x_platform_data *platform_data;
 	struct bcm2079x_dev *bcm2079x_dev;
-	#if 1
+	#if 0
 	struct regulator *nfc_regulator;
 	#endif
 
@@ -669,7 +669,7 @@ static int bcm2079x_probe(struct i2c_client *client,
 		goto err_misc_register;
 	}
 	
-	#if 1
+	#if 0
 	nfc_regulator = regulator_get(&client->dev, "vdd_nfc");
 	regulator_set_voltage(nfc_regulator,1800000,1800000);
 	regulator_set_optimum_mode(nfc_regulator,154000);
@@ -709,7 +709,7 @@ static int bcm2079x_probe(struct i2c_client *client,
 		 "%s, probing bcm2079x driver exited successfully\n",
 		 __func__);
 	
-	#if 1//def KT_ADAPTIVE	
+	#if 0//def KT_ADAPTIVE	
 	gpio_set_value(platform_data->en_gpio, 1);
 	gpio_set_value(platform_data->wake_gpio, 1);
 	r = nfcc_hw_check(client, platform_data->reg);
