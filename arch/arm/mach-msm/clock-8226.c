@@ -3149,7 +3149,7 @@ static struct clk_lookup msm_clocks_8226[] = {
 	/* NFC */
 	//xiangdong modify for nfc clock
 	#ifdef TYQ_NFC_BCM_SUPPORT	
-	CLK_LOOKUP("ref_clk",            cxo_d1_a_pin.c, "2-0077"),
+	CLK_LOOKUP("ref_clk",            cxo_d1_pin.c, "2-0077"),
 	#else
 	CLK_LOOKUP("ref_clk",            cxo_d1_a_pin.c, "2-000e"),
 	#endif
