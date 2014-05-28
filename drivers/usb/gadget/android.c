@@ -3000,9 +3000,20 @@ static int __devinit android_probe(struct platform_device *pdev)
 
 		pdata->streaming_func_count = len;
 
+/*TY ShenLei 2014/05/28 Add For UICCStorage Start*/
+/*
 		ret = of_property_read_u32(pdev->dev.of_node,
 				"qcom,android-usb-uicc-nluns",
 				&pdata->uicc_nluns);
+*/
+#ifdef TYQ_UICC_STORAGE_SUPPORT
+		ret = of_property_read_u32(pdev->dev.of_node,
+				"qcom,android-usb-uicc-nluns",
+				&pdata->uicc_nluns);
+#else
+             pdata->uicc_nluns = 0;
+#endif
+/*TY ShenLei 2014/05/28 Add For UICCStorage End*/
 	} else {
 		pdata = pdev->dev.platform_data;
 	}
