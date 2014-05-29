@@ -75,18 +75,48 @@
 	qcom,rpull-up-kohm = <100>;
 	qcom,vref-batt-therm = <1800000>;
 
-	/include/ "batterydata-qrd-4v2-2000mah.dtsi"
-	/include/ "TY_batterydata-qrd-4v35-2200mah.dtsi"
-	/include/ "TY_batterydata-qrd-LS-4v33-2250mah.dtsi"
+	/include/ "TY_batterydata-qrd-4v35-1850mah.dtsi"
 };
 
 &pm8226_bms {
+	qcom,r-sense-uohm = <10000>;
+	qcom,v-cutoff-uv = <3400000>;
+	qcom,r-conn-mohm = <0>;
+	qcom,shutdown-soc-valid-limit = <20>;
+	qcom,adjust-soc-low-threshold = <25>;
+	qcom,ocv-voltage-high-threshold-uv = <3750000>;
+	qcom,ocv-voltage-low-threshold-uv = <3650000>;
+	qcom,low-soc-calculate-soc-threshold = <15>;
+	qcom,low-soc-calculate-soc-ms = <5000>;
+	qcom,calculate-soc-ms = <20000>;
+	qcom,chg-term-ua = <100000>;
+	qcom,batt-type = <0>;
+	qcom,tm-temp-margin = <5000>;
+	qcom,low-ocv-correction-limit-uv = <100>;
+	qcom,high-ocv-correction-limit-uv = <50>;
+	qcom,hold-soc-est = <3>;
+	qcom,low-voltage-threshold = <3420000>;
 	qcom,battery-data = <&qrd_batterydata>;
 };
 
 &pm8226_chg {
-	qcom,battery-data = <&qrd_batterydata>;
+	qcom,vddmax-mv = <4350>;
+	qcom,vddsafe-mv = <4380>;
+	qcom,vinmin-mv = <4450>;
+	qcom,vbatdet-delta-mv = <100>;
+	qcom,ibatmax-ma = <1500>;
+	qcom,ibatterm-ma = <100>;
+	qcom,ibatsafe-ma = <1500>;
+	qcom,thermal-mitigation = <1500 700 600 325>;
+	qcom,resume-soc = <99>;
 	qcom,tchg-mins = <480>;
+	qcom,ibatmax-warm-ma = <350>;
+	qcom,warm-bat-decidegc = <450>;
+	qcom,warm-bat-mv = <4100>;
+	qcom,cool-bat-decidegc = <100>;
+	qcom,cool-bat-mv = <4100>;
+	qcom,ibatmax-cool-ma = <350>;
+	qcom,battery-data = <&qrd_batterydata>;
 };
 /*xiangdong add for battery end*/
 &spmi_bus {
