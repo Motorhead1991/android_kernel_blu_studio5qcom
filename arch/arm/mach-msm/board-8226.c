@@ -166,8 +166,16 @@ static const char *msm8226_dt_match[] __initconst = {
 	"qcom,apq8026",
 	NULL
 };
-
+/*TYRD wuxh modify for chip platform description on 20140530*/
+#if 1
+	#ifdef TYQ_TBT5988_SUPPORT	
+	DT_MACHINE_START(MSM8226_DT, "Qualcomm MSM 8928 (Flattened Device Tree)")
+	#else
+	DT_MACHINE_START(MSM8226_DT, "Qualcomm MSM 8926 (Flattened Device Tree)")
+	#endif
+#else
 DT_MACHINE_START(MSM8226_DT, "Qualcomm MSM 8226 (Flattened Device Tree)")
+#endif
 	.map_io = msm_map_msm8226_io,
 	.init_irq = msm_dt_init_irq,
 	.init_machine = msm8226_init,
