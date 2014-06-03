@@ -143,7 +143,7 @@ static struct msm_camera_i2c_reg_conf ov2675_recommend_settings[] = {
     {0x30ac, 0x42},
     {0x30d1, 0x08},
     {0x30a8, 0x54},
-    {0x3015, 0x52},
+    {0x3015, 0x32},
     {0x3093, 0x00},
     {0x307e, 0xe5},
     {0x3079, 0x00},
@@ -217,21 +217,21 @@ static struct msm_camera_i2c_reg_conf ov2675_recommend_settings[] = {
     {0x3320, 0xf8},
     {0x3321, 0x11},
     {0x3322, 0x92},
-    {0x3323, 0x01},
+{0x3323,0x05}, 
     {0x3324, 0x97},
     {0x3325, 0x02},
     {0x3326, 0xff},
-    {0x3327, 0x14},
+{0x3327,0x0b}, 
     {0x3328, 0x10},
     {0x3329, 0x12},
-    {0x332a, 0x58},
-    {0x332b, 0x57},
-    {0x332c, 0xac},
-    {0x332d, 0xb7},
-    {0x332e, 0x36},
-    {0x332f, 0x31},
-    {0x3330, 0x4d},
-    {0x3331, 0x42},
+{0x332a,0x5d}, 
+{0x332b,0x53}, 
+{0x332c,0xa7}, 
+{0x332d,0xa7}, 
+{0x332e,0x38}, 
+{0x332f,0x35}, 
+{0x3330,0x4b}, 
+{0x3331,0x43}, 
     {0x3332, 0xff},
     {0x3333, 0x00},
     {0x3334, 0xf0},
@@ -255,22 +255,24 @@ static struct msm_camera_i2c_reg_conf ov2675_recommend_settings[] = {
     {0x3389, 0x98},
     {0x338a, 0x01},
     //gamma
-    {0x3340, 0x0c},
-    {0x3341, 0x18},
-    {0x3342, 0x30},
-    {0x3343, 0x3d},
-    {0x3344, 0x4b},
-    {0x3345, 0x59},
-    {0x3346, 0x67},
-    {0x3347, 0x71},
-    {0x3348, 0x7d},
-    {0x3349, 0x8e},
-    {0x334a, 0x9b},
-    {0x334b, 0xa6},
-    {0x334c, 0xb9},
-    {0x334d, 0xc6},
-    {0x334e, 0xd9},
-    {0x334f, 0x34},
+	{0x3340,0x07}, // YST1
+	{0x3341,0x0f}, // YST2
+	{0x3342,0x21}, // YST3
+	{0x3343,0x32}, // YST4
+	{0x3344,0x41}, // YST5
+	{0x3345,0x4e}, // YST6
+	{0x3346,0x59}, // YST7
+	{0x3347,0x65}, // YST8
+	{0x3348,0x6e}, // YST9
+	{0x3349,0x81}, // YST10
+	{0x334a,0x91}, // YST11
+	{0x334b,0x9f}, // YST12
+	{0x334c,0xb8}, // YST13
+	{0x334d,0xcd}, // YST14
+	{0x334e,0xe1}, // YST15
+	{0x334f,0x29}, // Y slop, auto calculated if 0x06[7]=0
+
+
     //lenc
     //r
     {0x3350, 0x30},
@@ -352,7 +354,7 @@ static struct msm_camera_i2c_reg_conf ov2675_recommend_settings[] = {
 static struct msm_camera_i2c_reg_conf ov2675_VGA_settings[] = {
     {0x3011, 0x00},
     {0x3012, 0x10},
-    {0x3015, 0x52},
+    {0x3015, 0x32},
     {0x3014, 0x84},
     {0x3016, 0x82},
     {0x3023, 0x06},
@@ -469,7 +471,7 @@ static struct msm_camera_i2c_reg_conf ov2675_UXGA_settings[] = {
     {0x3606, 0x00},
     {0x3084, 0x01},
     {0x3634, 0x26},
-    {0x3015, 0x52},
+    {0x3015, 0x22},
     {0x3645, 0xf0},
     {0x300e, 0x34},
     {0x300f, 0xa6},
@@ -926,8 +928,8 @@ static int ov2675_set_saturation(struct msm_sensor_ctrl_t *s_ctrl, int saturatio
 		ov2675_write(s_ctrl, 0x3395, 0x30);
 		break;
 	case SATURATION_5:
-		ov2675_write(s_ctrl, 0x3394, 0x38);
-		ov2675_write(s_ctrl, 0x3395, 0x38);
+		ov2675_write(s_ctrl, 0x3394, 0x4c);
+		ov2675_write(s_ctrl, 0x3395, 0x4c);
 		break;
 	case SATURATION_6:
 		ov2675_write(s_ctrl, 0x3394, 0x40);
@@ -965,14 +967,14 @@ static int ov2675_set_exposure(struct msm_sensor_ctrl_t *s_ctrl, int exposure)
 		ov2675_write(s_ctrl, 0x301a, 0x73);
 		break;
 	case EXPOSURE_1:
-		ov2675_write(s_ctrl, 0x3018, 0x60);
-		ov2675_write(s_ctrl, 0x3019, 0x50);
+		ov2675_write(s_ctrl, 0x3018, 0x64);
+		ov2675_write(s_ctrl, 0x3019, 0x54);
 		ov2675_write(s_ctrl, 0x301a, 0x74);
 		break;
 	case EXPOSURE_2:
-		ov2675_write(s_ctrl, 0x3018, 0x68);
-		ov2675_write(s_ctrl, 0x3019, 0x58);
-		ov2675_write(s_ctrl, 0x301a, 0x84);
+		ov2675_write(s_ctrl, 0x3018, 0x88);
+		ov2675_write(s_ctrl, 0x3019, 0x78);
+		ov2675_write(s_ctrl, 0x301a, 0xd4);
 		break;
 	case EXPOSURE_3:
 		ov2675_write(s_ctrl, 0x3018, 0x70);
@@ -1553,7 +1555,7 @@ int ov2675_ISO_msm_sensor_s_ctrl_by_enum(struct msm_sensor_ctrl_t *s_ctrl,
     isp_ctrl = isp_ctrl & 0xf8 ;
     switch(value){
         case ISO_AUTO:
-            isp_ctrl = isp_ctrl |0x02 ;
+            isp_ctrl = 0x32 ;
             CDBG("%s: MSM_V4L2_ISO_AUTO\n", __func__);
             break ;
         case ISO_100:
@@ -1661,7 +1663,7 @@ void ov2675_set_rgb_gain(struct msm_sensor_ctrl_t *s_ctrl)
         if(cur_wb == MSM_CAMERA_WB_MODE_AUTO)
          {
             s_ctrl->sensor_i2c_client->i2c_func_tbl->i2c_write(s_ctrl->sensor_i2c_client, 0x3306,
-                0x12,MSM_CAMERA_I2C_BYTE_DATA);
+                0x10,MSM_CAMERA_I2C_BYTE_DATA);
             s_ctrl->sensor_i2c_client->i2c_func_tbl->i2c_write(s_ctrl->sensor_i2c_client, 0x3337,
                 ov2675_preview_R_gain,MSM_CAMERA_I2C_BYTE_DATA);
             s_ctrl->sensor_i2c_client->i2c_func_tbl->i2c_write(s_ctrl->sensor_i2c_client, 0x3338,

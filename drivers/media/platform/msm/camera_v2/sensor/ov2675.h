@@ -1,6 +1,5 @@
 enum v4l2_iso_mode {
 	ISO_AUTO = 0,
-	ISO_AUTO_HJR,
 	ISO_100,
 	ISO_200,
 	ISO_400,
