@@ -30,6 +30,12 @@ static struct msm_sensor_power_setting ov13850_power_setting[] = {
 		.delay = 1,
 	},
 	{
+		.seq_type = SENSOR_GPIO,
+		.seq_val = SENSOR_GPIO_VANA,
+		.config_val = GPIO_OUT_HIGH,
+		.delay = 5,
+	},
+	{
 		.seq_type = SENSOR_VREG,
 		.seq_val = CAM_VDIG,
 		.config_val = 0,
