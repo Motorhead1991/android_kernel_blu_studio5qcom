@@ -164,12 +164,14 @@ static void qpnp_vib_enable(struct timed_output_dev *dev, int value)
 	mutex_lock(&vib->lock);
 	hrtimer_cancel(&vib->vib_timer);
 	/*TYRD wuxh add begin for vibrator on 20140418*/
+	#if 0
 	if(value)
 		value = value+10;
 	if(value<51)
 		vib->vtg_level = 15;
 	else
 		vib->vtg_level = 28;
+	#endif
 	/*TYRD wuxh add end  for vibrator on 20140418*/
 
 	
