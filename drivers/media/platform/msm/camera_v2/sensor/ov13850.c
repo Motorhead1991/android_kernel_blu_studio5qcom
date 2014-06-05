@@ -29,12 +29,16 @@ static struct msm_sensor_power_setting ov13850_power_setting[] = {
 		.config_val = 0,
 		.delay = 1,
 	},
+/*wang_gj add for cam_gpio_vana enable begin*/
+#ifdef TYQ_CAM_GPIO_VANA_SUPPORT
 	{
 		.seq_type = SENSOR_GPIO,
 		.seq_val = SENSOR_GPIO_VANA,
 		.config_val = GPIO_OUT_HIGH,
 		.delay = 5,
 	},
+#endif
+/*wang_gj add for gpio_vana enable end*/
 	{
 		.seq_type = SENSOR_VREG,
 		.seq_val = CAM_VDIG,
