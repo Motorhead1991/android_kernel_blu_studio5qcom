@@ -74,6 +74,7 @@ struct panel_info lcd_panel_table[]=
 /*TYDRV:lichm 20140426 add for 5inch truly hx8394a 720p lcd support*/
 #if defined(TYQ_CONFIG_5INCH_TRYLY_HX8394A_HD_LCD_SUPPORT)
 	{"hx8394a 5inch hd ty video mode dsi panel","qcom,mdss_dsi_ty_5inch_hx8394a_hd_video"},
+	{"hx8394d 5inch hd ty video mode dsi panel","qcom,mdss_dsi_ty_5inch_hx8394d_hd_video"},
 #endif
 /*TYDRV: liujie add for 6inch truly r63315 FHD lcd*/
 #if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)

@@ -44,3 +44,4 @@
 /include/ "dsi-panel-ty-hx8394a-720p-video.dtsi"
 /*TYRD lichm add for 5inch HD lcd*/
 /include/ "dsi-panel-ty-5inch-hx8394a-hd-video.dtsi"
+/include/ "dsi-panel-ty-5inch-hx8394d-hd-video.dtsi"
