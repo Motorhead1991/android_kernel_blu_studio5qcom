@@ -410,7 +410,12 @@ int mdss_dsi_on(struct mdss_panel_data *pdata)
 		return ret;
 	}
 
+	/* lichm 20140610 modified for 5inch 8394d lcd begin */
+	#if defined(TYQ_CONFIG_5INCH_TRYLY_HX8394A_HD_LCD_SUPPORT)
+	#else
 	pdata->panel_info.panel_power_on = 1;
+	#endif
+	/* lichm 20140610 modified for 5inch 8394d lcd end */
 	mdss_dsi_phy_sw_reset((ctrl_pdata->ctrl_base));
 	mdss_dsi_phy_init(pdata);
 	mdss_dsi_bus_clk_stop(ctrl_pdata);
@@ -500,6 +505,11 @@ int mdss_dsi_on(struct mdss_panel_data *pdata)
 			return ret;
 		}
 	}
+	/* lichm 20140610 modified for 5inch 8394d lcd begin */
+	#if defined(TYQ_CONFIG_5INCH_TRYLY_HX8394A_HD_LCD_SUPPORT)
+	pdata->panel_info.panel_power_on = 1;
+	#endif
+	/* lichm 20140610 modified for 5inch 8394d lcd end */
 	if (pdata->panel_info.mipi.init_delay)
 		usleep(pdata->panel_info.mipi.init_delay);
 
