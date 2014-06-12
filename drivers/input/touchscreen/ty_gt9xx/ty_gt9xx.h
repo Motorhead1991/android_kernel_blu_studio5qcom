@@ -15,12 +15,17 @@
  * 
  */
 
+/*TYDRV:liujie update this file from 2.0 to 2.2*/
+
+
 #ifndef _GOODIX_GT9XX_H_
 #define _GOODIX_GT9XX_H_
 
 #include <linux/kernel.h>
 #include <linux/hrtimer.h>
 #include <linux/i2c.h>
+#include <linux/irq.h>
+#include <linux/slab.h>
 #include <linux/input.h>
 #include <linux/module.h>
 #include <linux/delay.h>
@@ -60,8 +65,9 @@
 #define GTP_CREATE_WR_NODE    1
 #define GTP_ESD_PROTECT       0    // esd protection with a cycle of 2 seconds
 #define GTP_WITH_PEN          0
+#define GTP_PEN_HAVE_BUTTON   0    // active pen has buttons, function together with GTP_WITH_PEN
 
-#define GTP_SLIDE_WAKEUP      0
+#define GTP_GESTURE_WAKEUP    0    // gesture wakeup
 #define GTP_DBL_CLK_WAKEUP    0    // double-click wakeup, function together with GTP_SLIDE_WAKEUP
 
 #define GTP_DEBUG_ON          0
@@ -75,18 +81,35 @@ typedef enum
     CHIP_TYPE_GT9F = 1,
 } CHIP_TYPE_T;
 #endif
-
+#define GOODIX_MAX_CFG_GROUP	6
+#define GTP_FW_NAME_MAXSIZE	50
+struct goodix_ts_platform_data {
+	int irq_gpio;
+	u32 irq_gpio_flags;
+	int reset_gpio;
+	u32 reset_gpio_flags;
+	const char *product_id;
+	const char *fw_name;
+	u32 x_max;
+	u32 y_max;
+	u32 x_min;
+	u32 y_min;
+	u32 panel_minx;
+	u32 panel_miny;
+	u32 panel_maxx;
+	u32 panel_maxy;
+	bool no_force_update;
+	bool i2c_pull_up;
+	bool enable_power_off;
+	size_t config_data_len[GOODIX_MAX_CFG_GROUP];
+	u8 *config_data[GOODIX_MAX_CFG_GROUP];
+};
 struct goodix_ts_data {
     spinlock_t irq_lock;
     struct i2c_client *client;
     struct input_dev  *input_dev;
     struct hrtimer timer;
     struct work_struct  work;
-    #if defined(CONFIG_FB)
-    struct notifier_block fb_notif;
-    #elif defined(CONFIG_HAS_EARLYSUSPEND)
-    struct early_suspend early_suspend;
-    #endif
     s32 irq_is_disable;
     s32 use_irq;
     u16 abs_x_max;
@@ -102,8 +125,11 @@ struct goodix_ts_data {
     u8  fw_error;
     u8  pnl_init_error;
     struct regulator *vdd;
-    struct regulator *vcc_i2c;
-    bool suspended;
+	  struct regulator *vcc_i2c;
+	  bool power_on;
+#if GTP_WITH_PEN
+    struct input_dev *pen_dev;
+#endif
 
 #if GTP_ESD_PROTECT
     spinlock_t esd_lock;
@@ -118,6 +144,12 @@ struct goodix_ts_data {
     CHIP_TYPE_T chip_type;
     u8 rqst_processing;
     u8 is_950;
+#endif
+	struct mutex lock;
+#if defined(CONFIG_FB)
+	struct notifier_block fb_notif;
+#elif defined(CONFIG_HAS_EARLYSUSPEND)
+	struct early_suspend early_suspend;
 #endif
     
 };
@@ -360,21 +392,21 @@ extern u16 total_len;
 /*TYDRV:liujie add for FHD TP*/
 #elif defined (TYQ_TBT5988_FHD_TP_SUPPORT)
 #define CTP_CFG_GROUP1 {\
-0x41,0x38,0x04,0x80,0x07,0x03,\
-0x0D,0x41,0x01,0x08,0x14,0x0F,\
+0x43,0x38,0x04,0x80,0x07,0x05,\
+0x0D,0x45,0x01,0x08,0x14,0x0F,\
 0x5A,0x28,0x03,0x05,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x17,\
-0x19,0x1C,0x14,0x88,0x08,0xFF,\
-0x46,0x00,0x7C,0x06,0xD3,0x07,\
-0x00,0x01,0x03,0x11,0x00,0x00,\
-0x00,0x00,0x00,0x0A,0x00,0x00,\
-0x00,0x00,0x00,0x3C,0x96,0x94,\
-0xC5,0x02,0x08,0x00,0x00,0x04,\
-0x86,0x42,0x00,0x75,0x4F,0x00,\
-0x67,0x5F,0x00,0x5C,0x72,0x00,\
-0x54,0x89,0x00,0x54,0x18,0x40,\
-0x70,0x00,0xF0,0x45,0x20,0xAA,\
-0xAA,0x27,0x00,0x00,0x00,0x00,\
+0x19,0x1C,0x14,0x88,0x28,0xFF,\
+0x3C,0x3E,0x7C,0x06,0xD3,0x07,\
+0x00,0x03,0x03,0x1D,0x00,0x00,\
+0x00,0x00,0x00,0x00,0x00,0x00,\
+0x00,0x00,0x00,0x2D,0x50,0x94,\
+0xD5,0x02,0x08,0x00,0x00,0x04,\
+0x9B,0x2F,0x00,0x8D,0x35,0x00,\
+0x7F,0x3C,0x00,0x75,0x43,0x00,\
+0x6C,0x4B,0x00,0x6C,0x18,0x40,\
+0x70,0x00,0xF0,0x45,0x20,0xFF,\
+0xFF,0x27,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x02,0x00,\
@@ -397,7 +429,7 @@ extern u16 total_len;
 0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,\
-0x00,0x00,0x00,0x00,0x22,0x01,\
+0x00,0x00,0x00,0x00,0x8C,0x01\
 }
 #define CTP_CFG_GROUP2 {\
 }
@@ -438,7 +470,7 @@ extern u16 total_len;
 // STEP_2(REQUIRED): Customize your I/O ports & I/O operations
 #define GTP_RST_PORT    16
 #define GTP_INT_PORT    17
-#define GTP_INT_IRQ     MSM_GPIO_TO_INT(GTP_INT_PORT)
+#define GTP_INT_IRQ     gpio_to_irq(GTP_INT_PORT)
 //#define GTP_INT_CFG     S3C_GPIO_SFN(0xF)
 
 #define GTP_GPIO_AS_INPUT(pin)          do{\
@@ -493,8 +525,9 @@ extern u16 total_len;
 #endif
 
 //***************************PART3:OTHER define*********************************
-#define GTP_DRIVER_VERSION    "V2.0<2013/08/28>"
-#define GTP_I2C_NAME          "Goodix-TS"
+#define GTP_DRIVER_VERSION          "V2.2<2014/01/14>"
+#define GTP_I2C_NAME                "Goodix-TS"
+#define GT91XX_CONFIG_PROC_FILE     "gt9xx_config"
 #define GTP_POLL_TIME         10    
 #define GTP_ADDR_LENGTH       2
 #define GTP_CONFIG_MIN_LENGTH 186
