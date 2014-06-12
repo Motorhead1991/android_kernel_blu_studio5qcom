@@ -45,6 +45,16 @@
 		compatible = "qcom,actuator";
 		qcom,cci-master = <0>;
 	};
+	/*TYRD gaohw add for ov8858_rear truly  af begin*/
+
+	actuator4: qcom,actuator@81 {
+		cell-index = <7>;
+		reg = <0x81>;
+		compatible = "qcom,actuator";
+		qcom,cci-master = <0>;
+	};
+
+	/*TYRD gaohw add for ov8858_rear truly af end*/
 	/*TYRD wang_gj add for ov5648_rear af end*/
 	/*TYRD wang_gj add for sunny_q5v22e OTP begin*/
 	eeprom7: qcom,eeprom@4b{
@@ -492,7 +502,7 @@
 		qcom,slave-id = <0x6C 0x300b 0x8858>;
 		qcom,csiphy-sd-index = <0>;
 		qcom,csid-sd-index = <0>;
-		qcom,actuator-src = <&actuator0>;
+		qcom,actuator-src = <&actuator4>;
 		qcom,led-flash-src = <&led_flash0>;
 		qcom,eeprom-src = <&eeprom10>;
 		qcom,mount-angle = <90>;
