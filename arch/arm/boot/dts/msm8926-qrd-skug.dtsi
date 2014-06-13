@@ -87,6 +87,26 @@
 			interrupt-gpios = <&msmgpio 17 0x00>;
 			vdd-supply = <&pm8226_l19>;
 			vcc_i2c-supply = <&pm8226_lvs1>;
+			/*TYDRV:liujie add for goodix TP dt begin 20140613*/
+			goodix,display-coords = <0 0 1080 1920>;
+			goodix,panel-coords = <0 0 1080 2200>;
+			goodix,button-map= <139 102 158>;
+			goodix,no-force-update;
+			goodix,i2c-pull-up;
+			goodix,group-id = <1>;
+			goodix,hard-reset-delay-ms = <20>;
+			goodix,soft-reset-delay-ms = <200>;
+			goodix,num-max-touches = <5>;
+			goodix,fw-name = "gtp_8926_qrd_fw.bin";
+			goodix,fw-delay-aa-ms = <30>;
+			goodix,fw-delay-55-ms = <30>;
+			goodix,fw-upgrade-id1 = <0x11>;
+			goodix,fw-upgrade-id2 = <0x11>;
+			goodix,fw-delay-readid-ms = <10>;
+			goodix,fw-delay-era-flsh-ms = <2000>;
+			goodix,fw-auto-cal;
+			goodix,ignore-id-check;
+			/*TYDRV:liujie add for goodix TP dt end 20140613*/
 		};
 		/* wuchx merge for goodix tp end */
 	};
