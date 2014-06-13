@@ -108,20 +108,14 @@
 				qcom,mode-ctrl = <0x60>;
 				};
 			};
-/*
-		pm8226_mpps: mpps {
-			mpp@a500 {
-			reg = <0xa500 0x100>;
-		       qcom,mode = <1>;
-		       qcom,invert = <0>;
-		       qcom,src-sel = <5>; //need select DTEST2
-		       qcom,pull = <1>;
-		       qcom,vin-sel = <3>;
-		       qcom,pin-num = <6>;
-		       qcom,master-en = <1>;
-			};
-         };*/
      };
+
+/*close wled control for current high*/
+	qcom,pm8226@1 {
+		qcom,leds@d800 {
+			status = "disabled";
+		};
+	};
 };
 /*gpio108 as lcd enable--msm8226-mdss.dtsi*/
 &soc {
