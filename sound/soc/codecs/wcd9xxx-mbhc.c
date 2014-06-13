@@ -176,8 +176,11 @@ enum wcd9xxx_current_v_idx {
 	WCD9XXX_CURRENT_V_BR_H,
 };
 
+/*niuli delete for cqwb00013867 begin*/
+#if 0
 static int wcd9xxx_detect_impedance(struct wcd9xxx_mbhc *mbhc, uint32_t *zl,
 				    uint32_t *zr);
+#endif/*niuli delete for cqwb00013867 end*/
 static s16 wcd9xxx_get_current_v(struct wcd9xxx_mbhc *mbhc,
 				 const enum wcd9xxx_current_v_idx idx);
 static void wcd9xxx_get_z(struct wcd9xxx_mbhc *mbhc, s16 *dce_z, s16 *sta_z,
@@ -945,8 +948,11 @@ static void wcd9xxx_report_plug(struct wcd9xxx_mbhc *mbhc, int insertion,
 						mbhc->mbhc_cfg->micbias);
 		}
 
+/*niuli delete for cqwb00013867 begin*/
+#if 0
 		if (mbhc->impedance_detect && impedance_detect_en)
 			wcd9xxx_detect_impedance(mbhc, &mbhc->zl, &mbhc->zr);
+#endif/*niuli delete for cqwb00013867 end*/
 
 		pr_debug("%s: Reporting insertion %d(%x)\n", __func__,
 			 jack_type, mbhc->hph_status);
@@ -2323,7 +2329,12 @@ static void wcd9xxx_find_plug_and_report(struct wcd9xxx_mbhc *mbhc,
 		 * source to VDDIO
 		 */
 		if (mbhc->event_state &
+		    //niuli camcorder mic noise
+		    #if 0
 		(1 << MBHC_EVENT_PA_HPHL | 1 << MBHC_EVENT_PA_HPHR))
+			#else
+		    (1 << MBHC_EVENT_PA_HPHL | 1 << MBHC_EVENT_PA_HPHR | 1 << MBHC_EVENT_PRE_TX_1_3_ON))
+		    #endif
 			__wcd9xxx_switch_micbias(mbhc, 1, false,
 						 false);
 		wcd9xxx_start_hs_polling(mbhc);
@@ -4757,6 +4768,8 @@ static int wcd9xxx_event_notify(struct notifier_block *self, unsigned long val,
 	return ret;
 }
 
+/*niuli delete for cqwb00013867 begin*/
+#if 0
 static int wcd9xxx_detect_impedance(struct wcd9xxx_mbhc *mbhc, uint32_t *zl,
 				    uint32_t *zr)
 {
@@ -4869,6 +4882,7 @@ static int wcd9xxx_detect_impedance(struct wcd9xxx_mbhc *mbhc, uint32_t *zl,
 
 	return ret;
 }
+#endif/*niuli delete for cqwb00013867 begin*/
 
 int wcd9xxx_mbhc_get_impedance(struct wcd9xxx_mbhc *mbhc, uint32_t *zl,
 			       uint32_t *zr)

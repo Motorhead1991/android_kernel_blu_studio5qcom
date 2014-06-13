@@ -1448,12 +1448,6 @@ int dsi_panel_device_register(struct device_node *pan_node,
 		ctrl_pdata->ndx = 1;
 	}
 
-/*niuli for dcs bl ctrl*/
-#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
-	if (ctrl_pdata->bklt_ctrl == BL_DCS_CMD){
-		mdss_dsi_panel_dcs_cfg(ctrl_pdata);
-	}
-#endif
 	pr_debug("%s: Panel data initialized\n", __func__);
 	return 0;
 }

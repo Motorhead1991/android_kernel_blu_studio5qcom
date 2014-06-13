@@ -417,7 +417,13 @@ void msm_pcm_routing_reg_phy_stream(int fedai_id, int perf_mode,
 
 			if (msm_bedais[i].port_id == VOICE_RECORD_RX ||
 			    msm_bedais[i].port_id == VOICE_RECORD_TX)
-				topology = DEFAULT_COPP_TOPOLOGY;
+			    //niuli add for voice recording 20140212 begin
+				#if 1
+			    topology = NULL_COPP_TOPOLOGY;
+			    #else
+			    topology = DEFAULT_COPP_TOPOLOGY;
+				#endif
+				//niuli add for voice recording 20140212 end
 			if ((stream_type == SNDRV_PCM_STREAM_PLAYBACK) &&
 				(channels > 0))
 				adm_multi_ch_copp_open(msm_bedais[i].port_id,
