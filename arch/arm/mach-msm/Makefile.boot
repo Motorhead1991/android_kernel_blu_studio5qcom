@@ -128,6 +128,10 @@ else ifeq (y,$(findstring y,$(filter TYQ_TBW5992_SUPPORT=%,$(TY_CP_OPTION))))
 else ifeq (y,$(findstring y,$(filter TYQ_TBW5706_SUPPORT=%,$(TY_CP_OPTION))))
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-v1-qrd-skug-5706.dtb
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-v2-qrd-skug-5706.dtb
+#TYDRV lichm add for 5958e dtb
+else ifeq (y,$(findstring y,$(filter TYQ_TBE5958E_SUPPORT=%,$(TY_CP_OPTION))))
+	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-v1-qrd-skug-5958e.dtb
+	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-v2-qrd-skug-5958e.dtb
 else ifeq (y,$(findstring y,$(filter TYQ_DTS_SUPPORT=%,$(TY_CP_OPTION))))
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-v1-qrd-skug.dtb
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-v2-qrd-skug.dtb
