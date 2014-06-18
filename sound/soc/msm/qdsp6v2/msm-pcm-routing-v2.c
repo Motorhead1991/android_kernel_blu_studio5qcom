@@ -584,7 +584,12 @@ static void msm_pcm_routing_process_audio(u16 reg, u16 val, int set)
 
 			if (msm_bedais[reg].port_id == VOICE_RECORD_RX ||
 			    msm_bedais[reg].port_id == VOICE_RECORD_TX)
+			    //niuli add for voice recording 20140212 begin
+				#if 1
+			    topology = NULL_COPP_TOPOLOGY;
+			    #else
 				topology = DEFAULT_COPP_TOPOLOGY;
+				#endif//niuli add for voice recording 20140212 end
 
 			if ((session_type == SESSION_TYPE_RX) &&
 				(channels > 0)) {
@@ -4265,7 +4270,14 @@ static int msm_pcm_routing_prepare(struct snd_pcm_substream *substream)
 
 			if (bedai->port_id == VOICE_RECORD_RX ||
 			    bedai->port_id == VOICE_RECORD_TX)
+			    //niuli add for voice recording 20140212 begin
+				#if 1
+			    topology = NULL_COPP_TOPOLOGY;
+			    #else
 				topology = DEFAULT_COPP_TOPOLOGY;
+                         #endif
+                          //niuli add for voice recording 20140212 end
+
 
 			if ((playback) && (channels > 0)) {
 				adm_multi_ch_copp_open(bedai->port_id,
