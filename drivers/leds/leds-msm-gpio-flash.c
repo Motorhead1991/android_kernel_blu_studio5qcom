@@ -45,7 +45,19 @@ static void led_gpio_brightness_set(struct led_classdev *led_cdev,
 
 	int brightness = value;
 	int flash_en = 0, flash_now = 0;
-
+/*wang_gj modify for gpio flash ctl begin*/
+#ifdef	CONFIG_LEDS_MSM_GPIO_FLASH
+	if (brightness > LED_HALF) {
+		flash_en = 1;
+		flash_now = 0;
+	} else if (brightness > LED_OFF) {
+		flash_en = 0;
+		flash_now = 1;
+	} else {
+		flash_en = 0;
+		flash_now = 0;
+	}
+#else
 	if (brightness > LED_HALF) {
 		flash_en = 0;
 		flash_now = 1;
@@ -56,6 +68,8 @@ static void led_gpio_brightness_set(struct led_classdev *led_cdev,
 		flash_en = 0;
 		flash_now = 0;
 	}
+#endif
+/*wang_gj modify for gpio flash ctl begin*/
 
 	rc = gpio_direction_output(flash_led->flash_en, flash_en);
 	if (rc) {
