@@ -228,7 +228,7 @@ static struct msm_camera_i2c_reg_conf ov7695_07pv_9753_init_settings[] = {
 {0x5504 ,0x08},// ;dns th1 8x
 {0x5505 ,0x48},// ;dns th2 8x
 {0x5506 ,0x08},// ;dns offset1
-{0x5507 ,0x16},// ;dns offset2
+{0x5507 ,0x18},// ;dns offset2
 {0x5508 ,0xad},// ; ;[6]:sharp_man [4]:dns_man
 {0x5509 ,0x08},// ;sharpth th1 8x
 {0x550a ,0x48},// ;sharpth th2 8x
@@ -426,7 +426,7 @@ static struct msm_camera_i2c_reg_conf ov7695_06pv_9705_init_settings[] = {
 {0x5504 ,0x08},// ;dns th1 8x
 {0x5505 ,0x48},// ;dns th2 8x
 {0x5506 ,0x08},// ;dns offset1
-{0x5507 ,0x16},// ;dns offset2
+{0x5507 ,0x18},// ;dns offset2
 {0x5508 ,0xad},// ; ;[6]:sharp_man [4]:dns_man
 {0x5509 ,0x08},// ;sharpth th1 8x
 {0x550a ,0x48},// ;sharpth th2 8x
