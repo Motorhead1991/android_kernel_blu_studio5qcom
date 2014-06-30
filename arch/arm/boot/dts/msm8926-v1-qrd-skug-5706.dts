@@ -19,6 +19,13 @@
 	compatible = "qcom,msm8926-qrd", "qcom,msm8926", "qcom,qrd";
 	qcom,board-id = <11 5>;
 };
+/*xiangdong add for k-touch therm config*/
+&pm8226_vadc {
+	chan@30 {
+		label = "batt_therm";
+		qcom,scale-function = <9>;
+	};
+};
 /*xiangdong add for nfc begin*/
 &soc {
 	i2c@f9925000 { /* BLSP1 QUP3 */
