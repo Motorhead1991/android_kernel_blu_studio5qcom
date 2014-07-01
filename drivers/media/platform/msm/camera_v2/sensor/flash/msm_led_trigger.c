@@ -70,6 +70,13 @@ static int32_t msm_led_trigger_config(struct msm_led_flash_ctrl_t *fctrl,
 
 	case MSM_CAMERA_LED_LOW:
 		if (fctrl->torch_trigger) {
+			/*gaohw add for gpio flash ctl begin*/
+			if(strcmp(fctrl->torch_trigger->name,"flashlight-trigger") == 0){
+				pr_err(" flashlight-trigger torch mode :TY gaohw LED current clamped to %d\n",LED_HALF);
+				led_trigger_event(fctrl->torch_trigger,LED_HALF);
+			}
+			else{
+			/*gaohw add for gpio flash ctl end*/
 			max_curr_l = fctrl->torch_max_current;
 			if (cfg->torch_current > 0 &&
 					cfg->torch_current < max_curr_l) {
@@ -81,6 +88,9 @@ static int32_t msm_led_trigger_config(struct msm_led_flash_ctrl_t *fctrl,
 			}
 			led_trigger_event(fctrl->torch_trigger,
 				curr_l);
+			/*gaohw add for gpio flash ctl begin*/
+		}
+			/*gaohw add for gpio flash ctl end*/
 		}
 		break;
 

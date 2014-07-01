@@ -97,17 +97,6 @@
 };
 /*xiangdong add for battery end*/
 
-/*wang_gj add for gpio flashlight begin*/
-&soc {
-	led_flash0: qcom,camera-led-flash {
-		cell-index = <0>;
-		compatible = "qcom,camera-led-flash";
-		qcom,flash-type = <3>;
-		qcom,flash-source = <&flashlight>;
-		qcom,torch-source = <&flashlight>;
-	};
-};
-/*wang_gj add for gpio flashlight end*/
 /*wang_gj add for gpio vana begin*/
 &cci {
 	eeprom8: qcom,eeprom@14{

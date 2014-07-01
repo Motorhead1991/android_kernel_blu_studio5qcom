@@ -26,7 +26,23 @@ static void msm_led_torch_brightness_set(struct led_classdev *led_cdev,
 		return;
 	}
 
-	led_trigger_event(torch_trigger, value);
+	/*gaohw add for gpio flash ctl begin*/
+	if(strcmp(torch_trigger->name,"flashlight-trigger") == 0){
+		if(value > 0){
+			pr_err(" flashlight-trigger torch mode :TY gaohw LED current clamped to 127\n");
+			led_trigger_event(torch_trigger,LED_HALF);
+		}
+		else{
+			pr_err(" flashlight-trigger torch mode :TY gaohw LED current is %d\n",value);
+			led_trigger_event(torch_trigger, value);
+		}
+	}
+	else{
+	/*gaohw add for gpio flash ctl end*/
+		led_trigger_event(torch_trigger, value);
+	/*gaohw add for gpio flash ctl begin*/
+	}
+	/*gaohw add for gpio flash ctl end*/
 };
 
 static struct led_classdev msm_torch_led = {
