@@ -306,7 +306,16 @@ static int ft5x0x_read_reg(struct i2c_client *client, u8 addr, u8 *val)
 {
 	return ft5x06_i2c_read(client, &addr, 1, val, 1);
 }
-
+/*TYRD wuxh add for ft firmware compatible(HD,QHD)*/
+#ifdef TYQ_FT_HDTOQHD
+int tyq_ft_hdqhd_firmware(struct i2c_client *client)
+{
+	int ret=0;
+	ret=ft5x0x_write_reg(client,0xc5,0x1);
+	printk("tyq_ft_hdqhd_firmware qhd\r\n");
+	return ret;
+}
+#endif
 static void ft5x06_update_fw_ver(struct ft5x06_ts_data *data)
 {
 	struct i2c_client *client = data->client;
@@ -596,6 +605,10 @@ static int ft5x06_ts_resume(struct device *dev)
 	}
 
 	msleep(data->pdata->soft_rst_dly);
+/*TYRD wuxh add for ft firmware compatible(HD,QHD)*/
+#ifdef TYQ_FT_HDTOQHD
+	tyq_ft_hdqhd_firmware(data->client);
+#endif
 	#if defined (TYQ_FOCALTECH_TP_CHARGEING_INTERFERENCE)
 	is_tp_resum = 1;
 	/*TYDRV:add by liujie .only then the flag is 1,then we wirte it*/
@@ -1596,7 +1609,11 @@ static int ft5x06_ts_probe(struct i2c_client *client,
 	}
 	/*TYDRV:liujie remove the macro limit 20140519*/
 	ft_probe_flag = 1;
-
+	
+	/*TYRD wuxh add for ft firmware compatible(HD,QHD)*/
+#ifdef TYQ_FT_HDTOQHD
+	tyq_ft_hdqhd_firmware(client);
+#endif
 
 	dev_info(&client->dev, "Device ID = 0x%x\n", reg_value);
 
@@ -3071,6 +3088,12 @@ static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long
 				}
 				kfree(pBuf);
 				fts_ctpm_auto_clb(g_stpTouchData);
+				
+				/*TYRD wuxh add for ft firmware compatible(HD,QHD)*/
+				#ifdef TYQ_FT_HDTOQHD
+				tyq_ft_hdqhd_firmware(g_stpTouchData->client);
+				#endif
+				
 				fts_GetFWVer(&ulVer);
 				printk("current tp_version = 0x%x\n",(u8)ulVer);
 				up(&upgrade_lock);
