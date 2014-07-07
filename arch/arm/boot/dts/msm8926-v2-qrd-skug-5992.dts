@@ -173,6 +173,14 @@
 	};
 };
 /*wang_gj add for gpio flashlight end*/
+/*niuli add for gui-mic noise in aac-recording begin 20140626*/
+&slim_msm {
+	tapan_codec {
+		qcom,cdc-micbias1-ext-cap;
+		qcom,cdc-micbias3-ext-cap;
+	};
+};
+/*niuli add for gui-mic noise in aac-recording end 20140626*/
 /*wang_gj add for gpio vana begin*/
 &cci {
 	eeprom8: qcom,eeprom@14{
