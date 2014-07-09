@@ -3383,7 +3383,8 @@ int msm_vidc_check_session_supported(struct msm_vidc_inst *inst)
 		if (msm_vp8_low_tier &&
 			inst->fmts[OUTPUT_PORT]->fourcc == V4L2_PIX_FMT_VP8) {
 			capability->width.max = DEFAULT_WIDTH;
-			capability->width.max = DEFAULT_HEIGHT;
+			//tianyu wangzhzh 20140709 modify
+			capability->height.max = DEFAULT_HEIGHT;
 		}
 		if (!rc && (inst->prop.width[CAPTURE_PORT] >
 			capability->width.max)) {
