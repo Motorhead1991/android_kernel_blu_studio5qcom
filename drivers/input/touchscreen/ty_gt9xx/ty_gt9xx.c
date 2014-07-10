@@ -51,7 +51,7 @@
 #include <linux/irq.h>
 #include "ty_gt9xx.h"
 #include <linux/regulator/consumer.h>
-#include <linux/of_gpio.h> //liujie
+#include <linux/of_gpio.h>
 
 #if GTP_ICS_SLOT_REPORT
     #include <linux/input/mt.h>
@@ -64,8 +64,8 @@
 #include <linux/uaccess.h>
 
 extern s32 gup_update_proc(void *dir);
+extern int gtp_update_proc(void *dir);
 extern s8 gup_update_config_file(struct i2c_client *client, char* cfg_buf,int buf_len);
-unsigned  char is_compare_version  = 1;
 #endif
 
 #define GOODIX_VTG_MIN_UV	2600000
@@ -86,12 +86,12 @@ unsigned  char is_compare_version  = 1;
 
 static const char *goodix_ts_name = "Goodix-TS";
 static struct workqueue_struct *goodix_wq;
-struct i2c_client * i2c_connect_client = NULL; 
+struct i2c_client *i2c_connect_client = NULL; 
 #define GOODIX_COORDS_ARR_SIZE	4
 
 
-u8 config[GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH]
-                = {GTP_REG_CONFIG_DATA >> 8, GTP_REG_CONFIG_DATA & 0xff};
+/*u8 config[GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH]
+                = {GTP_REG_CONFIG_DATA >> 8, GTP_REG_CONFIG_DATA & 0xff};*/
 
 #if GTP_HAVE_TOUCH_KEY
     static const u16 touch_key_array[] = GTP_KEY_TAB;
@@ -122,7 +122,6 @@ static const struct file_operations config_proc_ops = {
 #if defined(CONFIG_FB)
 static int fb_notifier_callback(struct notifier_block *self,
 				 unsigned long event, void *data);
-extern char upgradeing;
 
 #elif defined(CONFIG_HAS_EARLYSUSPEND)
 static void goodix_ts_early_suspend(struct early_suspend *h);
@@ -134,8 +133,10 @@ extern s32 init_wr_node(struct i2c_client*);
 extern void uninit_wr_node(void);
 #endif
 
+#if 0
 #if GTP_AUTO_UPDATE
 extern u8 gup_init_update_proc(struct goodix_ts_data *);
+#endif
 #endif
 
 #if GTP_ESD_PROTECT
@@ -368,14 +369,14 @@ s32 gtp_send_cfg(struct i2c_client *client)
     }
     else if (ts->pnl_init_error)
     {
-        GTP_INFO("Error occured in init_panel, no config sent");
+        GTP_INFO("Error occured in init_panel, no config sent\n");
         return 0;
     }
     
-    GTP_INFO("Driver send config.");
+    GTP_INFO("Driver send config.\n");
     for (retry = 0; retry < 5; retry++)
     {
-        ret = gtp_i2c_write(client, config , GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH);
+        ret = gtp_i2c_write(client, ts->config_data, ts->gtp_cfg_len);
         if (ret > 0)
         {
             break;
@@ -520,8 +521,8 @@ static void gtp_pen_init(struct goodix_ts_data *ts)
     input_set_capability(ts->pen_dev, EV_KEY, BTN_STYLUS2);
 #endif
 
-    input_set_abs_params(ts->pen_dev, ABS_MT_POSITION_X, 0, ts->abs_x_max, 0, 0);
-    input_set_abs_params(ts->pen_dev, ABS_MT_POSITION_Y, 0, ts->abs_y_max, 0, 0);
+    input_set_abs_params(ts->pen_dev, ABS_MT_POSITION_X, 0, ts->pdata->abs_x_max, 0, 0);
+    input_set_abs_params(ts->pen_dev, ABS_MT_POSITION_Y, 0, ts->pdata->abs_y_max, 0, 0);
     input_set_abs_params(ts->pen_dev, ABS_MT_PRESSURE, 0, 255, 0, 0);
     input_set_abs_params(ts->pen_dev, ABS_MT_TOUCH_MAJOR, 0, 255, 0, 0);
     input_set_abs_params(ts->pen_dev, ABS_MT_TRACKING_ID, 0, 255, 0, 0);
@@ -1055,7 +1056,8 @@ Output:
 *********************************************************/
 static enum hrtimer_restart goodix_ts_timer_handler(struct hrtimer *timer)
 {
-    struct goodix_ts_data *ts = container_of(timer, struct goodix_ts_data, timer);
+    struct goodix_ts_data *ts = NULL;
+	ts = container_of(timer, struct goodix_ts_data, timer);
 
     GTP_DEBUG_FUNC();
 
@@ -1375,9 +1377,9 @@ static s32 gtp_get_info(struct goodix_ts_data *ts)
     u8 opr_buf[6] = {0};
     s32 ret = 0;
     
-    ts->abs_x_max = GTP_MAX_WIDTH;
-    ts->abs_y_max = GTP_MAX_HEIGHT;
-    ts->int_trigger_type = GTP_INT_TRIGGER;
+    ts->pdata->abs_x_max = GTP_MAX_WIDTH;
+    ts->pdata->abs_y_max = GTP_MAX_HEIGHT;
+    ts->pdata->int_trigger_type = GTP_INT_TRIGGER;
         
     opr_buf[0] = (u8)((GTP_REG_CONFIG_DATA+1) >> 8);
     opr_buf[1] = (u8)((GTP_REG_CONFIG_DATA+1) & 0xFF);
@@ -1388,8 +1390,8 @@ static s32 gtp_get_info(struct goodix_ts_data *ts)
         return FAIL;
     }
     
-    ts->abs_x_max = (opr_buf[3] << 8) + opr_buf[2];
-    ts->abs_y_max = (opr_buf[5] << 8) + opr_buf[4];
+    ts->pdata->abs_x_max = (opr_buf[3] << 8) + opr_buf[2];
+    ts->pdata->abs_y_max = (opr_buf[5] << 8) + opr_buf[4];
     
     opr_buf[0] = (u8)((GTP_REG_CONFIG_DATA+6) >> 8);
     opr_buf[1] = (u8)((GTP_REG_CONFIG_DATA+6) & 0xFF);
@@ -1399,10 +1401,10 @@ static s32 gtp_get_info(struct goodix_ts_data *ts)
     {
         return FAIL;
     }
-    ts->int_trigger_type = opr_buf[2] & 0x03;
+    ts->pdata->int_trigger_type = opr_buf[2] & 0x03;
     
     GTP_INFO("X_MAX = %d, Y_MAX = %d, TRIGGER = 0x%02x",
-            ts->abs_x_max,ts->abs_y_max,ts->int_trigger_type);
+            ts->pdata->abs_x_max,ts->pdata->abs_y_max,ts->pdata->int_trigger_type);
     
     return SUCCESS;    
 }
@@ -1423,30 +1425,9 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
 
 #if GTP_DRIVER_SEND_CFG
     s32 i = 0;
-    u8 check_sum = 0;
     u8 opr_buf[16] = {0};
     u8 sensor_id = 0; 
-    
-    u8 cfg_info_group1[] = CTP_CFG_GROUP1;
-    u8 cfg_info_group2[] = CTP_CFG_GROUP2;
-    u8 cfg_info_group3[] = CTP_CFG_GROUP3;
-    u8 cfg_info_group4[] = CTP_CFG_GROUP4;
-    u8 cfg_info_group5[] = CTP_CFG_GROUP5;
-    u8 cfg_info_group6[] = CTP_CFG_GROUP6;
-    u8 *send_cfg_buf[] = {cfg_info_group1, cfg_info_group2, cfg_info_group3,
-                        cfg_info_group4, cfg_info_group5, cfg_info_group6};
-    u8 cfg_info_len[] = { CFG_GROUP_LEN(cfg_info_group1),
-                          CFG_GROUP_LEN(cfg_info_group2),
-                          CFG_GROUP_LEN(cfg_info_group3),
-                          CFG_GROUP_LEN(cfg_info_group4),
-                          CFG_GROUP_LEN(cfg_info_group5),
-                          CFG_GROUP_LEN(cfg_info_group6)};
-
-    GTP_DEBUG_FUNC();
-    GTP_DEBUG("Config Groups\' Lengths: %d, %d, %d, %d, %d, %d", 
-        cfg_info_len[0], cfg_info_len[1], cfg_info_len[2], cfg_info_len[3],
-        cfg_info_len[4], cfg_info_len[5]);
-
+	int cfg_id = 0;
     
 #if GTP_COMPATIBLE_MODE
     if (CHIP_TYPE_GT9F == ts->chip_type)
@@ -1462,45 +1443,80 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
             if (opr_buf[0] != 0xBE)
             {
                 ts->fw_error = 1;
-                GTP_ERROR("Firmware error, no config sent!");
-                return -1;
+                GTP_ERROR("enson:GTP Firmware error,need to repair!");
+                //return -1; //liujie remove
             }
         }
     }
 
-    if ((!cfg_info_len[1]) && (!cfg_info_len[2]) && 
-        (!cfg_info_len[3]) && (!cfg_info_len[4]) && 
-        (!cfg_info_len[5]))
+    if (1 == ts->pdata->cfg_count[0])
     {
-        sensor_id = 0; 
+        cfg_id = 0;
+		sensor_id = ts->pdata->cfg_count[1];
+		ts->config_data = ts->pdata->config_data[0];
+		ts->gtp_cfg_len = ts->pdata->config_data_len[0];
     }
     else
     {
-    #if GTP_COMPATIBLE_MODE
+#if GTP_COMPATIBLE_MODE
         msleep(50);
-    #endif
+#endif
         ret = gtp_i2c_read_dbl_check(ts->client, GTP_REG_SENSOR_ID, &sensor_id, 1);
         if (SUCCESS == ret)
         {
-            if (sensor_id >= 0x06)
+            /*if ((sensor_id > (GOODIX_MAX_CFG_GROUP-1))||(sensor_id < 0))
             {
-                GTP_ERROR("Invalid sensor_id(0x%02X), No Config Sent!", sensor_id);
+                GTP_ERROR("enson:GTP Invalid sensor_id(0x%02X), so we choose the cfg-data%d!\n", sensor_id,ts->pdata->cfg_count[1]);
+				cfg_id = 0;
+				sensor_id = ts->pdata->cfg_count[1];
                 ts->pnl_init_error = 1;
-                return -1;
             }
+			else
+			{*/
+				for(i=0;i<ts->pdata->cfg_count[0];i++)
+				{
+					if(ts->pdata->cfg_count[i+1] == sensor_id)
+					{
+						cfg_id = i;
+						break;
+					}
+				}
+				if(i == ts->pdata->cfg_count[0])
+				{
+					cfg_id = 0;
+					GTP_ERROR("enson:GTP no sensor_id(0x%02X)'cfg, so we choose the cfg-data%d!\n", sensor_id,ts->pdata->cfg_count[1]);
+				}
+			//}
+			for(i = 0;i < ts->pdata->cfg_count[0];i++)
+			{
+				if(i != cfg_id)
+				{
+					kfree(ts->pdata->config_data[i]);
+				}
+			}
+			ts->config_data = ts->pdata->config_data[cfg_id];
+			ts->gtp_cfg_len = ts->pdata->config_data_len[cfg_id];
         }
         else
         {
             GTP_ERROR("Failed to get sensor_id, No config sent!");
+			cfg_id = 0;
+			for(i = 0;i < ts->pdata->cfg_count[0];i++)
+			{
+				if(i != cfg_id)
+				{
+					kfree(ts->pdata->config_data[i]);
+				}
+			}
+			ts->config_data = ts->pdata->config_data[cfg_id];
+			ts->gtp_cfg_len = ts->pdata->config_data_len[cfg_id];
             ts->pnl_init_error = 1;
-            return -1;
+			return -1;
         }
-        GTP_INFO("Sensor_ID: %d", sensor_id);
     }
-    ts->gtp_cfg_len = cfg_info_len[sensor_id];
-    GTP_INFO("CTP_CONFIG_GROUP%d used, config length: %d", sensor_id + 1, ts->gtp_cfg_len);
+    GTP_INFO("enson:GTP sensor id = %d, config length: %d\n", sensor_id, ts->gtp_cfg_len);
     
-    if (ts->gtp_cfg_len < GTP_CONFIG_MIN_LENGTH)
+    if (ts->gtp_cfg_len < (GTP_CONFIG_MIN_LENGTH - GTP_ADDR_LENGTH))
     {
         GTP_ERROR("Config Group%d is INVALID CONFIG GROUP(Len: %d)! NO Config Sent! You need to check you header file CFG_GROUP section!", sensor_id+1, ts->gtp_cfg_len);
         ts->pnl_init_error = 1;
@@ -1516,16 +1532,13 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
 #endif
     {
         ret = gtp_i2c_read_dbl_check(ts->client, GTP_REG_CONFIG_DATA, &opr_buf[0], 1);
-        
         if (ret == SUCCESS)
         {
-            GTP_DEBUG("CFG_GROUP%d Config Version: %d, 0x%02X; IC Config Version: %d, 0x%02X", sensor_id+1, 
-                        send_cfg_buf[sensor_id][0], send_cfg_buf[sensor_id][0], opr_buf[0], opr_buf[0]);
+ 			GTP_DEBUG("CFG_GROUP%d Config Version: %d, 0x%02X; IC Config Version: %d, 0x%02X", sensor_id+1, 
+                       ts->config_data[GTP_ADDR_LENGTH], ts->config_data[GTP_ADDR_LENGTH], opr_buf[0], opr_buf[0]);
             
             if (opr_buf[0] < 90)    
             {
-                grp_cfg_version = send_cfg_buf[sensor_id][0];       // backup group config version
-                //send_cfg_buf[sensor_id][0] = 0x00;  //liujie edit to forbindden 0x00
                 ts->fixed_cfg = 0;
             }
             else        // treated as fixed config, not send config
@@ -1542,52 +1555,46 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
             return -1;
         }
     }
-    
-    memset(&config[GTP_ADDR_LENGTH], 0, GTP_CONFIG_MAX_LENGTH);
-    memcpy(&config[GTP_ADDR_LENGTH], send_cfg_buf[sensor_id], ts->gtp_cfg_len);
 
 #if GTP_CUSTOM_CFG
-    config[RESOLUTION_LOC]     = (u8)GTP_MAX_WIDTH;
-    config[RESOLUTION_LOC + 1] = (u8)(GTP_MAX_WIDTH>>8);
-    config[RESOLUTION_LOC + 2] = (u8)GTP_MAX_HEIGHT;
-    config[RESOLUTION_LOC + 3] = (u8)(GTP_MAX_HEIGHT>>8);
+    ts->config_data[RESOLUTION_LOC]     = (u8)GTP_MAX_WIDTH;
+    ts->config_data[RESOLUTION_LOC + 1] = (u8)(GTP_MAX_WIDTH>>8);
+    ts->config_data[RESOLUTION_LOC + 2] = (u8)GTP_MAX_HEIGHT;
+    ts->config_data[RESOLUTION_LOC + 3] = (u8)(GTP_MAX_HEIGHT>>8);
     
     if (GTP_INT_TRIGGER == 0)  //RISING
     {
-        config[TRIGGER_LOC] &= 0xfe; 
+        ts->config_data[TRIGGER_LOC] &= 0xfe; 
     }
     else if (GTP_INT_TRIGGER == 1)  //FALLING
     {
-        config[TRIGGER_LOC] |= 0x01;
+        ts->config_data[TRIGGER_LOC] |= 0x01;
     }
-#endif  // GTP_CUSTOM_CFG
-    
-    check_sum = 0;
-    for (i = GTP_ADDR_LENGTH; i < ts->gtp_cfg_len; i++)
+	for (i = GTP_ADDR_LENGTH; i < (ts->gtp_cfg_len - GTP_ADDR_LENGTH); i++)
     {
-        check_sum += config[i];
+        check_sum += ts->config_data[i];
     }
-    config[ts->gtp_cfg_len] = (~check_sum) + 1;
-
+    ts->config_data[ts->gtp_cfg_len-2] = (~check_sum) + 1;
+#endif  // GTP_CUSTOM_CFG
 #else // driver not send config
 
     ts->gtp_cfg_len = GTP_CONFIG_MAX_LENGTH;
-    ret = gtp_i2c_read(ts->client, config, ts->gtp_cfg_len + GTP_ADDR_LENGTH);
+    ret = gtp_i2c_read(ts->client, ts->config_data, ts->gtp_cfg_len);
     if (ret < 0)
     {
         GTP_ERROR("Read Config Failed, Using Default Resolution & INT Trigger!");
-        ts->abs_x_max = GTP_MAX_WIDTH;
-        ts->abs_y_max = GTP_MAX_HEIGHT;
-        ts->int_trigger_type = GTP_INT_TRIGGER;
+        ts->pdata->abs_x_max = GTP_MAX_WIDTH;
+        ts->pdata->abs_y_max = GTP_MAX_HEIGHT;
+        ts->pdata->int_trigger_type = GTP_INT_TRIGGER;
     }
     
 #endif // GTP_DRIVER_SEND_CFG
 
-    if ((ts->abs_x_max == 0) && (ts->abs_y_max == 0))
+    if ((ts->pdata->abs_x_max == 0) && (ts->pdata->abs_y_max == 0))
     {
-        ts->abs_x_max = (config[RESOLUTION_LOC + 1] << 8) + config[RESOLUTION_LOC];
-        ts->abs_y_max = (config[RESOLUTION_LOC + 3] << 8) + config[RESOLUTION_LOC + 2];
-        ts->int_trigger_type = (config[TRIGGER_LOC]) & 0x03; 
+        ts->pdata->abs_x_max = (ts->config_data[RESOLUTION_LOC + 1] << 8) + ts->config_data[RESOLUTION_LOC];
+        ts->pdata->abs_y_max = (ts->config_data[RESOLUTION_LOC + 3] << 8) + ts->config_data[RESOLUTION_LOC + 2];
+        ts->pdata->int_trigger_type = (ts->config_data[TRIGGER_LOC]) & 0x03; 
     }
 
 #if GTP_COMPATIBLE_MODE
@@ -1597,12 +1604,12 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
         u8 driver_num = 0;
         u8 have_key = 0;
         
-        have_key = (config[GTP_REG_HAVE_KEY - GTP_REG_CONFIG_DATA + 2] & 0x01);
+        have_key = (ts->config_data[GTP_REG_HAVE_KEY - GTP_REG_CONFIG_DATA + 2] & 0x01);
         
         if (1 == ts->is_950)
         {
-            driver_num = config[GTP_REG_MATRIX_DRVNUM - GTP_REG_CONFIG_DATA + 2];
-            sensor_num = config[GTP_REG_MATRIX_SENNUM - GTP_REG_CONFIG_DATA + 2];
+            driver_num = ts->config_data[GTP_REG_MATRIX_DRVNUM - GTP_REG_CONFIG_DATA + 2];
+            sensor_num = ts->config_data[GTP_REG_MATRIX_SENNUM - GTP_REG_CONFIG_DATA + 2];
             if (have_key)
             {
                 driver_num--;
@@ -1611,38 +1618,40 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
         }
         else
         {
-            driver_num = (config[CFG_LOC_DRVA_NUM] & 0x1F) + (config[CFG_LOC_DRVB_NUM]&0x1F);
+            driver_num = (ts->config_data[CFG_LOC_DRVA_NUM] & 0x1F) + (ts->config_data[CFG_LOC_DRVB_NUM]&0x1F);
             if (have_key)
             {
                 driver_num--;
             }
-            sensor_num = (config[CFG_LOC_SENS_NUM] & 0x0F) + ((config[CFG_LOC_SENS_NUM] >> 4) & 0x0F);
+            sensor_num = (ts->config_data[CFG_LOC_SENS_NUM] & 0x0F) + ((ts->config_data[CFG_LOC_SENS_NUM] >> 4) & 0x0F);
             ts->bak_ref_len = (driver_num * (sensor_num - 2) + 2) * 2;
         }
     
         GTP_INFO("Drv * Sen: %d * %d(key: %d), X_MAX: %d, Y_MAX: %d, TRIGGER: 0x%02x",
-           driver_num, sensor_num, have_key, ts->abs_x_max,ts->abs_y_max,ts->int_trigger_type);
+           driver_num, sensor_num, have_key, ts->pdata->abs_x_max,ts->pdata->abs_y_max,ts->pdata->int_trigger_type);
         return 0;
     }
     else
 #endif
     {
-    #if GTP_DRIVER_SEND_CFG
+#if GTP_DRIVER_SEND_CFG
+		/*TYDRV:liujie add for firmware error 20140630*/
+		if(1 == ts->fw_error)
+		{
+			return 0;
+		}
+/*TYDRV:liujie add to compare the cfg version, if file version is lower 
+  * then the ic cfg version,we do not send it 20140630*/
+		if(opr_buf[0] >= ts->config_data[GTP_ADDR_LENGTH])
+		{
+			return 0;
+		}
         ret = gtp_send_cfg(ts->client);
         if (ret < 0)
         {
             GTP_ERROR("Send config error.");
         }
-        // set config version to CTP_CFG_GROUP, for resume to send config
-        config[GTP_ADDR_LENGTH] = grp_cfg_version;
-        check_sum = 0;
-        for (i = GTP_ADDR_LENGTH; i < ts->gtp_cfg_len; i++)
-        {
-            check_sum += config[i];
-        }
-        config[ts->gtp_cfg_len] = (~check_sum) + 1;
-    #endif
-        GTP_INFO("X_MAX: %d, Y_MAX: %d, TRIGGER: 0x%02x", ts->abs_x_max,ts->abs_y_max,ts->int_trigger_type);
+#endif
     }
     
     msleep(10);
@@ -1653,7 +1662,8 @@ static ssize_t gt91xx_config_read_proc(struct file *file, char __user *page, siz
 {
     char *ptr = page;
     char temp_data[GTP_CONFIG_MAX_LENGTH + 2] = {0x80, 0x47};
-    int i;
+    int i = 0;
+	struct goodix_ts_data *ts = i2c_get_clientdata(i2c_connect_client);
     
     if (*ppos)
     {
@@ -1663,7 +1673,7 @@ static ssize_t gt91xx_config_read_proc(struct file *file, char __user *page, siz
 
     for (i = 0 ; i < GTP_CONFIG_MAX_LENGTH ; i++)
     {
-        ptr += sprintf(ptr, "0x%02X ", config[i + 2]);
+        ptr += sprintf(ptr, "0x%02X ", ts->config_data[i + 2]);
 
         if (i % 8 == 7)
             ptr += sprintf(ptr, "\n");
@@ -1687,6 +1697,7 @@ static ssize_t gt91xx_config_read_proc(struct file *file, char __user *page, siz
 static ssize_t gt91xx_config_write_proc(struct file *filp, const char __user *buffer, size_t count, loff_t *off)
 {
     s32 ret = 0;
+	struct goodix_ts_data *ts = i2c_get_clientdata(i2c_connect_client);
 
     GTP_DEBUG("write count %d\n", count);
 
@@ -1696,7 +1707,7 @@ static ssize_t gt91xx_config_write_proc(struct file *filp, const char __user *bu
         return -EFAULT;
     }
 
-    if (copy_from_user(&config[2], buffer, count))
+    if (copy_from_user(&(ts->config_data[2]), buffer, count))
     {
         GTP_ERROR("copy from user fail\n");
         return -EFAULT;
@@ -1795,16 +1806,34 @@ static s8 gtp_request_io_port(struct goodix_ts_data *ts)
     s32 ret = 0;
 
     GTP_DEBUG_FUNC();
-    GTP_GPIO_AS_INPUT(GTP_RST_PORT);
-
-    gtp_reset_guitar(ts->client, 20);
-    
-    if(ret < 0)
+/*TYDRV:liujie to request the io before we use it and change the way of 
+  *function used,don't use the GTP_GPIO_AS_INPUT() because of no 
+  *vaule return 20140626*/
+	ret = GTP_GPIO_REQUEST(GTP_RST_PORT, "GTP_RST_PORT");
+    if (ret < 0) 
     {
-        GTP_GPIO_FREE(GTP_RST_PORT);
-        GTP_GPIO_FREE(GTP_INT_PORT);
+        GTP_ERROR("Failed to request GPIO:%d, ERRNO:%d",(s32)GTP_RST_PORT,ret);
+        ret = -ENODEV;
+		goto error_ret;
     }
-
+    ret = gpio_direction_input(GTP_RST_PORT);
+	if (ret < 0) 
+    {
+        printk("enson:GTP Failed to set GPIO:%d, ERRNO:%d",(s32)GTP_RST_PORT,ret);
+        ret = -ENODEV;
+		goto error_ret;
+    }
+/*TYDRV:liujie to request the io before we use it 20140626*/	
+	ret = GTP_GPIO_REQUEST(GTP_INT_PORT, "GTP_INT_IRQ");
+    if (ret < 0) 
+    {
+        printk("enson:GTP Failed to request GPIO:%d, ERRNO:%d\n", (s32)GTP_INT_PORT, ret);
+        ret = -ENODEV;
+		goto error_ret;
+    }
+	ts->client->irq = GTP_INT_IRQ;
+	gtp_reset_guitar(ts->client, 20);
+error_ret:
     return ret;
 }
 
@@ -1820,14 +1849,13 @@ Output:
 static s8 gtp_request_irq(struct goodix_ts_data *ts)
 {
     s32 ret = -1;
-    const u8 irq_table[] = GTP_IRQ_TAB;
 
     GTP_DEBUG_FUNC();
-    GTP_DEBUG("INT trigger type:%x", ts->int_trigger_type);
+    GTP_DEBUG("INT trigger type:%x", ts->pdata->int_trigger_type);
     GTP_DEBUG("ts->client->irq:%d", ts->client->irq);
 
 	ret = request_irq(ts->client->irq, goodix_ts_irq_handler,
-			irq_table[ts->int_trigger_type],
+			ts->pdata->int_trigger_type,
 			ts->client->name, ts);
     if (ret)
     {
@@ -1894,11 +1922,11 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
 #endif
 
 #if GTP_CHANGE_X2Y
-    GTP_SWAP(ts->abs_x_max, ts->abs_y_max);
+    GTP_SWAP(ts->pdata->abs_x_max, ts->pdata->abs_y_max);
 #endif
 
-    input_set_abs_params(ts->input_dev, ABS_MT_POSITION_X, 0, ts->abs_x_max, 0, 0);
-    input_set_abs_params(ts->input_dev, ABS_MT_POSITION_Y, 0, ts->abs_y_max, 0, 0);
+    input_set_abs_params(ts->input_dev, ABS_MT_POSITION_X, 0, ts->pdata->abs_x_max, 0, 0);
+    input_set_abs_params(ts->input_dev, ABS_MT_POSITION_Y, 0, ts->pdata->abs_y_max, 0, 0);
     input_set_abs_params(ts->input_dev, ABS_MT_WIDTH_MAJOR, 0, 255, 0, 0);
     input_set_abs_params(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0, 255, 0, 0);
     input_set_abs_params(ts->input_dev, ABS_MT_TRACKING_ID, 0, 255, 0, 0);
@@ -2396,10 +2424,10 @@ static int goodix_ts_get_dt_coords(struct device *dev, char *name,
 		pdata->panel_maxx = coords[2];
 		pdata->panel_maxy = coords[3];
 	} else if (!strcmp(name, "goodix,display-coords")) {
-		pdata->x_min = coords[0];
-		pdata->y_min = coords[1];
-		pdata->x_max = coords[2];
-		pdata->y_max = coords[3];
+		pdata->abs_x_min = coords[0];
+		pdata->abs_y_min = coords[1];
+		pdata->abs_x_max= coords[2];
+		pdata->abs_y_max= coords[3];
 	} else {
 		dev_err(dev, "unsupported property %s\n", name);
 		return -EINVAL;
@@ -2450,7 +2478,7 @@ static int goodix_power_on(struct goodix_ts_data *ts)
 		err = gpio_direction_output(GPIO_VDD_2_8V, 1);
 		if (err) {
 			dev_err(&ts->client->dev,
-				"set_direction for ft5x06 2.8V gpio failed\n");
+				"set_direction for goodix 2.8V gpio failed\n");
 			goto free_vdd_gpio;
 		}
 	}
@@ -2498,7 +2526,7 @@ free_vdd_gpio:
 		gpio_free(GPIO_VDD_2_8V);
 	return ret;
 #endif
-	return ret; //liujie
+	return ret;
 }
 
 /**
@@ -2564,7 +2592,7 @@ static int goodix_power_off(struct goodix_ts_data *ts)
  */
 static int goodix_power_init(struct goodix_ts_data *ts)
 {
-	int ret;
+	int ret = 0;
 #ifdef FEATURE_QRD8X26_UNISCOPE_MODIFY	
 	int err = 0;
 #endif
@@ -2582,53 +2610,56 @@ static int goodix_power_init(struct goodix_ts_data *ts)
 		dev_info(&ts->client->dev,
 			"Regulator get failed vcc_i2c ret=%d\n", ret);
 	}
+/*TYDRV:liujie,now we didn't need this feature,when need it some of this codes need to modify
+  * in gtp_request_io_port()  goodix_gpio_free()some code is need to modify too 20140626*/
 #ifdef FEATURE_QRD8X26_UNISCOPE_MODIFY
-	if (regulator_count_voltages(ts->vcc_i2c) > 0) {
-		err = regulator_set_voltage(ts->vcc_i2c, GOODIX_I2C_VTG_MIN_UV,
-					   GOODIX_I2C_VTG_MIN_UV);
-	if (err) {
-		dev_err(&ts->client->dev,
-		"Regulator set_vtg failed vcc_i2c rc=%d\n", err);
-		goto err_set_vtg_vcc_i2c;
+		if (regulator_count_voltages(ts->vcc_i2c) > 0) {
+			err = regulator_set_voltage(ts->vcc_i2c, GOODIX_I2C_VTG_MIN_UV,
+						   GOODIX_I2C_VTG_MIN_UV);
+		if (err) {
+			dev_err(&ts->client->dev,
+			"Regulator set_vtg failed vcc_i2c rc=%d\n", err);
+			goto err_set_vtg_vcc_i2c;
+			}
 		}
-	}
-
-	err = gpio_request(GPIO_VDD_2_8V, "ft5x06 2.8V");
-	if (err) {
-		dev_err(&ts->client->dev, "ft5x06 2.8V request failed");
-	}
-	return 0;
-///request GTP GPIO			--Timing 2014-2-14  
-	ret = GTP_GPIO_REQUEST(GTP_INT_PORT, "GTP_INT_IRQ");
-    if (ret < 0) 
-    {
-        GTP_ERROR("Failed to request GPIO:%d, ERRNO:%d", (s32)GTP_INT_PORT, ret);
-        ret = -ENODEV;
-    }
-    else
-    {
-        GTP_GPIO_AS_INT(GTP_INT_PORT);  
-        ts->client->irq = GTP_INT_IRQ;
-    }
-
-    ret = GTP_GPIO_REQUEST(GTP_RST_PORT, "GTP_RST_PORT");
-    if (ret < 0) 
-    {
-        GTP_ERROR("Failed to request GPIO:%d, ERRNO:%d",(s32)GTP_RST_PORT,ret);
-        ret = -ENODEV;
-    }
-///RST and INT output low for poweron timing			--Timing 2014-2-14
-		err = gpio_direction_output(GTP_INT_PORT, 0);
-		err = gpio_direction_output(GTP_RST_PORT, 0);
-		err = gpio_direction_output(GPIO_VDD_2_8V, 0);
-		msleep(200);
-		
-err_set_vtg_vcc_i2c:
-	if (!IS_ERR(ts->vdd))
-		regulator_disable(ts->vdd);
-	return 0;
+	
+		err = gpio_request(GPIO_VDD_2_8V, "ft5x06 2.8V");
+		if (err) {
+			dev_err(&ts->client->dev, "ft5x06 2.8V request failed");
+		}
+		return 0;
+	///request GTP GPIO 		--Timing 2014-2-14
+		ret = GTP_GPIO_REQUEST(GTP_INT_PORT, "GTP_INT_IRQ");
+		if (ret < 0) 
+		{
+			GTP_ERROR("Failed to request GPIO:%d, ERRNO:%d", (s32)GTP_INT_PORT, ret);
+			ret = -ENODEV;
+		}
+		else
+		{
+			GTP_GPIO_AS_INT(GTP_INT_PORT);	
+			ts->client->irq = GTP_INT_IRQ;
+		}
+	
+		ret = GTP_GPIO_REQUEST(GTP_RST_PORT, "GTP_RST_PORT");
+		if (ret < 0) 
+		{
+			GTP_ERROR("Failed to request GPIO:%d, ERRNO:%d",(s32)GTP_RST_PORT,ret);
+			ret = -ENODEV;
+		}
+	///RST and INT output low for poweron timing			--Timing 2014-2-14
+			err = gpio_direction_output(GTP_INT_PORT, 0);
+			err = gpio_direction_output(GTP_RST_PORT, 0);
+			err = gpio_direction_output(GPIO_VDD_2_8V, 0);
+			msleep(200);
+			
+	err_set_vtg_vcc_i2c:
+		if (!IS_ERR(ts->vdd))
+			regulator_disable(ts->vdd);
+		return 0;
 #endif
-	return 0;//liujie
+
+	return ret;
 }
 
 
@@ -2650,19 +2681,39 @@ static int goodix_parse_dt(struct device *dev,
 {
 	int rc;
 	struct device_node *np = dev->of_node;
-	struct property *prop;
-	u32 temp_val, num_buttons;
-	u32 button_map[MAX_BUTTONS];
+	struct property *prop; 
+	int interrupts_array[2];
 	char prop_name[PROP_NAME_SIZE];
-	int i, read_cfg_num;
+	int i = 0;
+	//int read_cfg_num = 0;
+#if 0
+	u32 temp_val,
+	int num_buttons;
+	u32 button_map[MAX_BUTTONS];
+#endif
 
 	rc = goodix_ts_get_dt_coords(dev, "goodix,panel-coords", pdata);
-	if (rc && (rc != -EINVAL))
+	if (rc)
+	{
+		dev_err(dev, "Unable to read goodix,panel-coords\n");
 		return rc;
+	}
+
 	rc = goodix_ts_get_dt_coords(dev, "goodix,display-coords", pdata);
 	if (rc)
+	{
+		dev_err(dev, "Unable to read goodix,display-coords\n");
 		return rc;
-
+	}
+	rc = of_property_read_u32_array(np, "interrupts", interrupts_array,2);
+	if (rc) 
+	{
+		dev_err(dev, "Unable to read goodix interrupts\n");
+		return rc;
+	}
+	pdata->int_trigger_type = interrupts_array[1];
+	printk("enson:goodix pdata->int_trigger_type = %d\n",interrupts_array[1]);
+#if 0
 	pdata->i2c_pull_up = of_property_read_bool(np,
 						"goodix,i2c-pull-up");
 	
@@ -2709,32 +2760,51 @@ static int goodix_parse_dt(struct device *dev,
 			return rc;
 		}
 	}
-	read_cfg_num = 0;
-	for (i = 0; i < GOODIX_MAX_CFG_GROUP; i++) {
-		snprintf(prop_name, sizeof(prop_name), "goodix,cfg-data%d", i);
-		prop = of_find_property(np, prop_name,
-			&pdata->config_data_len[i]);
-		if (!prop || !prop->value) {
-			pdata->config_data_len[i] = 0;
-			pdata->config_data[i] = NULL;
-			continue;
+#endif
+	rc = of_property_read_u32_array(np, "goodix,cfg-count", pdata->cfg_count,GOODIX_MAX_CFG_GROUP+1);
+	if((!rc) && (pdata->cfg_count[0] >0) && (pdata->cfg_count[0] < (GOODIX_MAX_CFG_GROUP+1)))
+	{
+		for (i = 0; i < pdata->cfg_count[0]; i++) {
+			snprintf(prop_name, sizeof(prop_name), "goodix,cfg-data%d", pdata->cfg_count[i+1]);
+			prop = of_find_property(np, prop_name,
+				&pdata->config_data_len[i]);
+			if (!prop || !prop->value) {
+				/*pdata->config_data_len[i] = 0;
+				pdata->config_data[i] = NULL;
+				continue;*/
+				dev_err(dev,"enson:GTP where are no cfg-data%d\n",pdata->cfg_count[i+1]);
+				return -1;
+			}
+			pdata->config_data_len[i] += GTP_ADDR_LENGTH;
+			pdata->config_data[i] = kzalloc(pdata->config_data_len[i],
+					GFP_KERNEL);
+			if (!pdata->config_data[i]) {
+				dev_err(dev,
+					"Not enough memory for panel config data %d\n",
+					i);
+				return -ENOMEM;
+			}
+			pdata->config_data[i][0] = GTP_REG_CONFIG_DATA >> 8;
+			pdata->config_data[i][1] = GTP_REG_CONFIG_DATA & 0xff;
+			memcpy(&pdata->config_data[i][GTP_ADDR_LENGTH],
+					prop->value, (pdata->config_data_len[i]-GTP_ADDR_LENGTH));
+			printk("enson:lenth of cfg = %d\n",pdata->config_data_len[i]);
+			//read_cfg_num++;
 		}
-		pdata->config_data[i] = devm_kzalloc(dev,
-				GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH,
-				GFP_KERNEL);
-		if (!pdata->config_data[i]) {
-			dev_err(dev,
-				"Not enough memory for panel config data %d\n",
-				i);
-			return -ENOMEM;
-		}
-		pdata->config_data[i][0] = GTP_REG_CONFIG_DATA >> 8;
-		pdata->config_data[i][1] = GTP_REG_CONFIG_DATA & 0xff;
-		memcpy(&pdata->config_data[i][GTP_ADDR_LENGTH],
-				prop->value, pdata->config_data_len[i]);
-		read_cfg_num++;
+		
 	}
-	dev_info(dev, "%d config data read from device tree.\n", read_cfg_num);
+	else
+	{
+		dev_err(dev,"enson:GTP cfg-count error in dt\n");
+		return -1;
+	}
+	/*if(0 == read_cfg_num)
+	{
+		dev_err(dev,"enson:GTP there are no cfg data in dt\n");
+		return -1;
+	}*/
+	
+	dev_info(dev, "%d config data read from device tree.\n", i);
 
 	return 0;
 }
@@ -3003,6 +3073,7 @@ u8 gtp_get_vendor_id(void)
 	return vendor_id;
 }
 
+#define FW_HEAD_LENGTH               14
 /*TYDRV: liujie modify this function  20140516*/
 static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long arg)
 {
@@ -3012,6 +3083,7 @@ static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long
 	u8 vendor;
 	unsigned long  ulVer = 0;
 	TY_TP_FWS __user *argp = (TY_TP_FWS __user *)arg;
+	struct goodix_ts_data *ts = NULL;
 	
 	if (!argp)
 	{
@@ -3125,13 +3197,13 @@ static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long
 				printk("%s:get buffer error.\n",__func__);
 				return -EAGAIN;
 			}
-			
+			ts = i2c_get_clientdata(i2c_connect_client);
+			ts->fw_total_len = bufarg.bufLength - FW_HEAD_LENGTH;
+			ts->fw_buf = pBuf;
      #if defined(NV_TOUCH_FT)
 			if( TYN_TOUCH_FOCALTECH == bufarg.touchType)
 			{
-				is_compare_version = 0;
-				iret = gup_update_proc(pBuf);
-				is_compare_version= 1;
+				iret = gtp_update_proc(pBuf);
 				if(iret !=1 )
 				{
 					printk("update focaltech firmware failed.\n");
@@ -3446,6 +3518,21 @@ static int ty_creat_virtual_key_sysfs(void)
 	return ret;
 }
 #endif
+/*TYDRV:liujie add this function to free gpio 20140630*/
+static void goodix_gpio_free(void)
+{
+	if(gpio_is_valid(GTP_RST_PORT))
+	{
+		gpio_direction_input(GTP_RST_PORT);
+		gpio_free(GTP_RST_PORT);
+	}
+	if(gpio_is_valid(GTP_RST_PORT))
+	{
+		gpio_direction_input(GTP_INT_PORT);
+		gpio_free(GTP_INT_PORT);
+	}
+	
+}
 /*******************************************************
 Function:
     I2c probe.
@@ -3462,6 +3549,7 @@ Output:
     struct goodix_ts_platform_data *pdata;
     struct goodix_ts_data *ts;
     u16 version_info;
+	int i = 0;
     
     GTP_DEBUG_FUNC();
     
@@ -3470,11 +3558,10 @@ Output:
     GTP_INFO("GTP Driver Built@%s, %s", __TIME__, __DATE__);
     GTP_INFO("GTP I2C Address: 0x%02x", client->addr);
 
-    i2c_connect_client = client;
-    //dev_dbg(&client->dev, "GTP I2C Address: 0x%02x\n", client->addr);
+    
 	if (client->dev.of_node) {
-		pdata = devm_kzalloc(&client->dev,
-			sizeof(struct goodix_ts_platform_data), GFP_KERNEL);
+		pdata = kzalloc(sizeof(struct goodix_ts_platform_data),
+						GFP_KERNEL);
 		if (!pdata) {
 			dev_err(&client->dev,
 				"GTP Failed to allocate memory for pdata\n");
@@ -3483,9 +3570,21 @@ Output:
 
 		ret = goodix_parse_dt(&client->dev, pdata);
 		if (ret)
+		{
+			dev_err(&client->dev,"enson:GTP parse dt failed\n");
+			for(i=0;i < pdata->cfg_count[0];i++)
+			{
+				if(pdata->config_data[i] != NULL)
+				{
+					kfree(pdata->config_data[i]);
+				}
+			}
+			kfree(pdata);
 			return ret;
+		}
 	} else {
-		pdata = client->dev.platform_data;
+		dev_err(&client->dev,"enson:GTP doesn't have dts\n");
+		return -1;
 	}
 	
     if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) 
@@ -3493,16 +3592,19 @@ Output:
         GTP_ERROR("I2C check functionality failed.");
         return -ENODEV;
     }
-    ts = kzalloc(sizeof(*ts), GFP_KERNEL);
+	ts = kzalloc(sizeof(*ts), GFP_KERNEL);
     if (ts == NULL)
     {
         GTP_ERROR("Alloc GFP_KERNEL memory failed.");
         return -ENOMEM;
     }
-    
-    memset(ts, 0, sizeof(*ts));
+    i2c_connect_client = client;
+	ts->client = client;
+	ts->pdata  = pdata;
+	ts->config_data = ts->pdata->config_data[0];
+	ts->gtp_cfg_len = ts->pdata->config_data_len[0];
+	ts->is_compare_version = true;
     INIT_WORK(&ts->work, goodix_ts_work_func);
-    ts->client = client;
     spin_lock_init(&ts->irq_lock);          // 2.6.39 later
     // ts->irq_lock = SPIN_LOCK_UNLOCKED;   // 2.6.39 & before
 #if GTP_ESD_PROTECT
@@ -3512,27 +3614,36 @@ Output:
     // ts->esd_lock = SPIN_LOCK_UNLOCKED;
 #endif
     i2c_set_clientdata(client, ts);
-    ts->gtp_rawdiff_mode = 0;
+    ts->gtp_rawdiff_mode = false;
 	ret = goodix_power_init(ts);
 	if (ret) {
 		dev_err(&client->dev, "GTP power init failed\n");
 		goto exit_free_client_data;
 	}
-
 	ret = goodix_power_on(ts);
 	if (ret) {
 		dev_err(&client->dev, "GTP power on failed\n");
 		goto exit_deinit_power;
 	}
-
     ret = gtp_request_io_port(ts);
     if (ret < 0)
     {
         GTP_ERROR("GTP request IO port failed.");
+		kfree(ts->pdata);
+		kfree(ts->config_data);
         kfree(ts);
-       goto exit_power_off;
+        goto exit_power_off;
     }
-    
+	/*TYDRV:liujie forward this function to avoid no TP,but init*/
+    ret = gtp_i2c_test(client);
+    if (ret < 0)
+    {
+    	GTP_ERROR("enson:GTP I2C test error,maybe no TP connect,driver exit!!!");
+    	kfree(ts->pdata);
+		kfree(ts->config_data);
+        kfree(ts);
+        goto exit_power_off;
+    }
 #if GTP_COMPATIBLE_MODE
     gtp_get_chip_type(ts);
     
@@ -3545,39 +3656,29 @@ Output:
         }
     }
 #endif
-    ret = gtp_i2c_test(client);
-    if (ret < 0)
-    {
-        GTP_ERROR("I2C communication ERROR!");
-    }
-
     ret = gtp_read_version(client, &version_info);
     if (ret < 0)
     {
         GTP_ERROR("Read version failed.");
     }
-    
     ret = gtp_init_panel(ts);
     if (ret < 0)
     {
-        GTP_ERROR("GTP init panel failed.");
-        ts->abs_x_max = GTP_MAX_WIDTH;
-        ts->abs_y_max = GTP_MAX_HEIGHT;
-        ts->int_trigger_type = GTP_INT_TRIGGER;
+		GTP_ERROR("enson:GTP init panel error!\n");
     }
-    #if defined(CONFIG_FB)
+#if defined(CONFIG_FB)
 	ts->fb_notif.notifier_call = fb_notifier_callback;
 	ret = fb_register_client(&ts->fb_notif);
 	if (ret)
 		dev_err(&ts->client->dev,
 			"Unable to register fb_notifier: %d\n",
 			ret);
-    #elif defined(CONFIG_HAS_EARLYSUSPEND)
+#elif defined(CONFIG_HAS_EARLYSUSPEND)
 	ts->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 1;
 	ts->early_suspend.suspend = goodix_ts_early_suspend;
 	ts->early_suspend.resume = goodix_ts_late_resume;
 	register_early_suspend(&ts->early_suspend);
-   #endif
+#endif
     // Create proc file system
     gt91xx_config_proc = proc_create(GT91XX_CONFIG_PROC_FILE, 0666, NULL, &config_proc_ops);
     if (gt91xx_config_proc == NULL)
@@ -3588,7 +3689,7 @@ Output:
     {
         GTP_INFO("create proc entry %s success", GT91XX_CONFIG_PROC_FILE);
     }
-
+#if 0
 #if GTP_AUTO_UPDATE
     ret = gup_init_update_proc(ts);
     if (ret < 0)
@@ -3596,13 +3697,12 @@ Output:
         GTP_ERROR("Create update thread error.");
     }
 #endif
-
+#endif
     ret = gtp_request_input_dev(ts);
     if (ret < 0)
     {
         GTP_ERROR("GTP request input dev failed");
     }
-    
     ret = gtp_request_irq(ts); 
     if (ret < 0)
     {
@@ -3634,15 +3734,21 @@ Output:
 #if	 TY_TP_SYSFS
 	create_touchscreen_identification_sysfs();
 #endif
+	/*TYDRV:liujie add to prompt driver init done 20140701*/
+	printk("enson:GTP driver init done!!!\n");
     return 0;
 exit_power_off:
 		goodix_power_off(ts);
+		/*TYDRV:liujie add to free the gpio 20140701*/
+		goodix_gpio_free();
 
 exit_deinit_power:
 		goodix_power_deinit(ts);
 
 exit_free_client_data:
 	i2c_set_clientdata(client, NULL);
+	/*TYDRV:liujie add to prompt error occured when driver init 20140701*/
+	printk("enson:GTP driver init error,exit!!!\n");
 	return 0;
 
 }
@@ -3679,8 +3785,8 @@ static int goodix_ts_remove(struct i2c_client *client)
     {
         if (ts->use_irq)
         {
-            GTP_GPIO_AS_INPUT(GTP_INT_PORT);
-            GTP_GPIO_FREE(GTP_INT_PORT);
+			/*TYDRV:liujie edit it for gpio free 20140630*/
+			goodix_gpio_free();
             free_irq(client->irq, ts);
         }
         else
@@ -3692,6 +3798,8 @@ static int goodix_ts_remove(struct i2c_client *client)
     GTP_INFO("GTP driver removing...");
     i2c_set_clientdata(client, NULL);
     input_unregister_device(ts->input_dev);
+	kfree(ts->pdata);
+	kfree(ts->config_data);
     kfree(ts);
 
     return 0;
@@ -3777,11 +3885,12 @@ static void goodix_ts_late_resume(struct i2c_client *client)
     {
         // do nothing
     }
-    else
+    //else
 #endif
-    {
+/*TYDRV:liujie remove send cfg when resume 20140630*/
+    /*{
         gtp_send_cfg(ts->client);
-    }
+    }*/
 
     if (ts->use_irq)
     {
@@ -3811,10 +3920,13 @@ static void goodix_ts_suspend(struct goodix_ts_data *ts)
 {
 	int ret = -1;
 
+	if (ts->suspended) {
+		return ;
+	}
 	//mutex_lock(&ts->lock);
-GTP_DEBUG_FUNC();
+	GTP_DEBUG_FUNC();
 
-    GTP_INFO("System suspend.");
+    //GTP_INFO("System suspend.");
 
     ts->gtp_is_suspend = 1;
 #if GTP_ESD_PROTECT
@@ -3840,7 +3952,9 @@ GTP_DEBUG_FUNC();
     }
     // to avoid waking up while not sleeping
     //  delay 48 + 10ms to ensure reliability    
-    msleep(58);  
+    msleep(58);
+	/*TYDRV:liujie add for tp status flag*/
+	ts->suspended = true;
 	//mutex_unlock(&ts->lock);
 }
 
@@ -3857,9 +3971,13 @@ static void goodix_ts_resume(struct goodix_ts_data *ts)
 	int ret = -1;
 
 		//mutex_lock(&ts->lock);
-	  GTP_DEBUG_FUNC();
+	GTP_DEBUG_FUNC();
     
-    GTP_INFO("System resume.");
+    //GTP_INFO("System resume.");
+    /*DYDRV:liujie add for sostenuto cmd 20140630*/
+    if (!ts->suspended) {
+		return ;
+	}
     ret = gtp_wakeup_sleep(ts);
 
 #if GTP_GESTURE_WAKEUP
@@ -3875,11 +3993,12 @@ static void goodix_ts_resume(struct goodix_ts_data *ts)
     {
         // do nothing
     }
-    else
+    //else
 #endif
-    {
+/*TYDRV:liujie remove send cfg when resume 20140630*/
+    /*{
         gtp_send_cfg(ts->client);
-    }
+    }*/
 
     if (ts->use_irq)
     {
@@ -3894,6 +4013,7 @@ static void goodix_ts_resume(struct goodix_ts_data *ts)
 #if GTP_ESD_PROTECT
     gtp_esd_switch(ts->client, SWITCH_ON);
 #endif
+	ts->suspended =false;
 	//mutex_unlock(&ts->lock);
 }
 
@@ -3905,7 +4025,12 @@ static int fb_notifier_callback(struct notifier_block *self,
 	int *blank;
 	struct goodix_ts_data *ts =
 		container_of(self, struct goodix_ts_data, fb_notif);
-
+	/*TYDRV:liujie add for upgradeing flag 20140627*/
+	if(ts->enter_update)
+	{
+		printk("update is doing,ignore the resume and suspend cmd!!!\n");
+		return 0;
+	}
 	if (evdata && evdata->data && event == FB_EVENT_BLANK &&
 			ts && ts->client) {
 		blank = evdata->data;

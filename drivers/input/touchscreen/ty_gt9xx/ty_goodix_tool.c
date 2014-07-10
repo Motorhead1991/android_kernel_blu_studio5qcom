@@ -160,6 +160,7 @@ static s32 tool_i2c_write_no_extra(u8* buf, u16 len)
     return ret;
 }
 
+#if 0
 static s32 tool_i2c_read_with_extra(u8* buf, u16 len)
 {
     s32 ret = -1;
@@ -185,6 +186,7 @@ static s32 tool_i2c_write_with_extra(u8* buf, u16 len)
 
     return ret;
 }
+#endif
 
 static void register_i2c_func(void)
 {
@@ -192,6 +194,7 @@ static void register_i2c_func(void)
 //        || !strncmp(IC_TYPE, "GT811", 5) || !strncmp(IC_TYPE, "GT818F", 6) 
 //        || !strncmp(IC_TYPE, "GT827", 5) || !strncmp(IC_TYPE,"GT828", 5)
 //        || !strncmp(IC_TYPE, "GT813", 5))
+#if 0
     if (strncmp(IC_TYPE, "GT8110", 6) && strncmp(IC_TYPE, "GT8105", 6)
         && strncmp(IC_TYPE, "GT801", 5) && strncmp(IC_TYPE, "GT800", 5)
         && strncmp(IC_TYPE, "GT801PLUS", 9) && strncmp(IC_TYPE, "GT811", 5)
@@ -202,6 +205,7 @@ static void register_i2c_func(void)
         GTP_DEBUG("I2C function: with pre and end cmd!");
     }
     else
+#endif
     {
         tool_i2c_read = tool_i2c_read_no_extra;
         tool_i2c_write = tool_i2c_write_no_extra;

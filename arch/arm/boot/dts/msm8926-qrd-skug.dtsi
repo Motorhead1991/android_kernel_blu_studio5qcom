@@ -82,7 +82,7 @@
 			compatible = "goodix,gt9xx";
 			reg = <0x5d>;
 			interrupt-parent = <&msmgpio>;
-			interrupts = <17 0x2008>;
+			interrupts = <17 0x1>;
 			reset-gpios = <&msmgpio 16 0x00>;
 			interrupt-gpios = <&msmgpio 17 0x00>;
 			vdd-supply = <&pm8226_l19>;
@@ -106,6 +106,45 @@
 			goodix,fw-delay-era-flsh-ms = <2000>;
 			goodix,fw-auto-cal;
 			goodix,ignore-id-check;
+			goodix,cfg-count = <1 0 0 0 0 0 0>;
+			goodix,cfg-data0 = [46 38 04 80 07 05 
+								0C 65 01 08 32 0F 
+								5F 3C 03 03 00 00 
+								00 00 00 00 00 17 
+								19 1C 14 88 28 FF 
+								25 27 82 0A D3 07 
+								01 03 04 11 00 00 
+								00 00 00 04 00 08 
+								0A 00 00 1E 37 94 
+								D5 02 08 00 00 04 
+								9B 1F 00 8D 24 00 
+								7F 28 00 75 2D 00 
+								6C 33 00 6C 18 40 
+								70 00 F0 45 20 AA 
+								AA 27 00 0A CA 00 
+								00 00 00 00 00 00 
+								00 00 00 00 00 00 
+								00 00 00 00 00 00 
+								00 00 00 00 00 01 
+								02 03 04 05 06 07 
+								0E 0D 0C 0B 0A 09 
+								08 15 14 13 12 11 
+								10 0F 16 17 18 19 
+								1A 1B 1C 1D 1E 1F 
+								20 22 24 28 29 2A 
+								0C 0A 08 06 05 04 
+								02 00 FF 00 00 00 
+								00 00 00 00 00 00 
+								00 00 00 00 00 00 
+								00 00 00 00 00 00 
+								00 00 00 00 00 00 
+								00 00 00 00 00 00 
+								00 00 00 00 00 00 
+								00 00 00 00 00 00 
+								00 00 00 00 00 00 
+								00 00 00 00 00 00 
+								00 00 00 00 00 00 
+								00 00 00 00 B0 01];
 			/*TYDRV:liujie add for goodix TP dt end 20140613*/
 		};
 		/* wuchx merge for goodix tp end */
