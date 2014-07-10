@@ -962,29 +962,34 @@ static int ov2675_set_exposure(struct msm_sensor_ctrl_t *s_ctrl, int exposure)
 	exposure = (exposure + 12) / 6;
 	switch (exposure) {
 	case EXPOSURE_0:
-		ov2675_write(s_ctrl, 0x3018, 0x58);
-		ov2675_write(s_ctrl, 0x3019, 0x48);
-		ov2675_write(s_ctrl, 0x301a, 0x73);
+		ov2675_write(s_ctrl, 0x3018, 0x40);
+		ov2675_write(s_ctrl, 0x3019, 0x30);
+		ov2675_write(s_ctrl, 0x301a, 0x71);
+		ov2675_write(s_ctrl, 0x3015, 0x22);
 		break;
 	case EXPOSURE_1:
-		ov2675_write(s_ctrl, 0x3018, 0x64);
-		ov2675_write(s_ctrl, 0x3019, 0x54);
-		ov2675_write(s_ctrl, 0x301a, 0x74);
+		ov2675_write(s_ctrl, 0x3018, 0x5a);
+		ov2675_write(s_ctrl, 0x3019, 0x4a);
+		ov2675_write(s_ctrl, 0x301a, 0xc2);
+		ov2675_write(s_ctrl, 0x3015, 0x22);
 		break;
 	case EXPOSURE_2:
 		ov2675_write(s_ctrl, 0x3018, 0x88);
 		ov2675_write(s_ctrl, 0x3019, 0x78);
 		ov2675_write(s_ctrl, 0x301a, 0xd4);
+		ov2675_write(s_ctrl, 0x3015, 0x22);
 		break;
 	case EXPOSURE_3:
-		ov2675_write(s_ctrl, 0x3018, 0x70);
-		ov2675_write(s_ctrl, 0x3019, 0x60);
-		ov2675_write(s_ctrl, 0x301a, 0x84);
+		ov2675_write(s_ctrl, 0x3018, 0xa8);
+		ov2675_write(s_ctrl, 0x3019, 0x98);
+		ov2675_write(s_ctrl, 0x301a, 0xe6);
+		ov2675_write(s_ctrl, 0x3015, 0x23);
 		break;
 	case EXPOSURE_4:
-		ov2675_write(s_ctrl, 0x3018, 0x78);
-		ov2675_write(s_ctrl, 0x3019, 0x68);
-		ov2675_write(s_ctrl, 0x301a, 0x95);
+		ov2675_write(s_ctrl, 0x3018, 0xc8);
+		ov2675_write(s_ctrl, 0x3019, 0xb8);
+		ov2675_write(s_ctrl, 0x301a, 0xf7);
+		ov2675_write(s_ctrl, 0x3015, 0x24);
 		break;
 	default:
 		return -EINVAL;
