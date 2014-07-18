@@ -1200,6 +1200,11 @@ int dsi_panel_device_register(struct device_node *pan_node,
 	struct platform_device *ctrl_pdev = NULL;
 	bool dynamic_fps;
 	const char *data;
+//niuli
+#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
+	u32 data1;
+       u32 dsi_ctrl, intr_ctrl;
+#endif
 	struct mdss_panel_info *pinfo = &(ctrl_pdata->panel_data.panel_info);
 
 	mipi  = &(pinfo->mipi);
@@ -1447,6 +1452,45 @@ int dsi_panel_device_register(struct device_node *pan_node,
 			ctrl_pdata->ctrl_base, ctrl_pdata->reg_size);
 		ctrl_pdata->ndx = 1;
 	}
+
+//niuli
+#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
+		if(mipi->bllp_power_stop){
+//			pr_err("%s:!### mipi->bllp_power_stop= %d \n", __func__,((int)mipi->bllp_power_stop));
+			data1 = 0;
+			data1 = MIPI_INP((ctrl_pdata->ctrl_base) + 0x0010);
+			if(!(data1 & BIT(12))){
+				data1 = 0;
+				data1 = MIPI_INP((ctrl_pdata->ctrl_base) + 0x0010);
+				data1 |= BIT(12);
+				MIPI_OUTP((ctrl_pdata->ctrl_base) + 0x0010, data1);
+
+				wmb();
+			
+				pr_err("%s:0 ###ctrl_pdata->ctrl_base = %x \n", __func__,((int)ctrl_pdata->ctrl_base));
+			}
+		}
+
+/*mdss_dsi_op_mode_config for mipi wr/re begin*/
+{
+	dsi_ctrl = MIPI_INP((ctrl_pdata->ctrl_base) + 0x0004);
+
+	/*If Video enabled, Keep Video and Cmd mode ON */
+	if (dsi_ctrl & 0x02)
+		dsi_ctrl &= ~0x05;
+	else
+		dsi_ctrl &= ~0x07;
+
+		dsi_ctrl |= 0x03;
+		intr_ctrl = DSI_INTR_CMD_DMA_DONE_MASK | DSI_INTR_BTA_DONE_MASK;
+
+
+	MIPI_OUTP((ctrl_pdata->ctrl_base) + 0x0110,
+				intr_ctrl); /* DSI_INTL_CTRL */
+	MIPI_OUTP((ctrl_pdata->ctrl_base) + 0x0004, dsi_ctrl);
+	wmb();
+}
+#endif		
 
 	pr_debug("%s: Panel data initialized\n", __func__);
 	return 0;

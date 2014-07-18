@@ -38,7 +38,7 @@ void mdss_dsi_panel_pwm_cfg(struct mdss_dsi_ctrl_pdata *ctrl)
 }
 
 /*niuli for dcs bl ctrl*/
-#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
+#if 0 //defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
 void mdss_dsi_panel_dcs_cfg(struct mdss_dsi_ctrl_pdata *ctrl)
 {
 		u32 data;
@@ -174,12 +174,12 @@ static void mdss_dsi_panel_bklt_dcs(struct mdss_dsi_ctrl_pdata *ctrl, int level)
 	cmdreq.cb = NULL;
 
 /*niuli for dcs bl ctrl*/
-#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
+#if 0 //defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
 	mdss_dsi_panel_dcs_cfg(ctrl);
 #endif
 	mdss_dsi_cmdlist_put(ctrl, &cmdreq);
 /*niuli for dcs bl ctrl*/
-#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
+#if 0 //defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
 	mdss_dsi_panel_dcs_cfg_off(ctrl);
 #endif
 }
@@ -453,7 +453,10 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 	struct mipi_panel_info *mipi;
 	struct mdss_dsi_ctrl_pdata *ctrl = NULL;
 /*TYRD wuxh add begin for ssd lcd on 20140123*/
+#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
+#else
 	u32 data;
+#endif
 /*TYRD wuxh add end for ssd lcd on 20140123*/
 	if (pdata == NULL) {
 		pr_err("%s: Invalid input data\n", __func__);
@@ -472,6 +475,8 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 		mdss_dsi_panel_bl_ctrl(pdata,0);
 /*TYRD wuxh add end for white lcd blink when poweroff on 20140123*/
 /*TYRD wuxh add begin for ssd lcd on 20140123*/
+#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)/*niuli delete for bllp mode on*/
+#else
 	if(ctrl->off_cmds.link_state ==DSI_HS_MODE)
 	{
 		data = 0;
@@ -485,11 +490,13 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 		
 		pr_err("%s: ctrl->ctrl_base = %x \n", __func__,((int)ctrl->ctrl_base));
 	}
+#endif/*niuli delete for bllp mode on*/
 /*TYRD wuxh add end for ssd lcd on 20140123*/
 	if (ctrl->off_cmds.cmd_cnt)
 		mdss_dsi_panel_cmds_send(ctrl, &ctrl->off_cmds);
 /*TYRD wuxh add begin for ssd lcd on 20140123*/
-
+#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)/*niuli delete for bllp mode on*/
+#else
 	if(ctrl->off_cmds.link_state ==DSI_HS_MODE)
 	{
 		data =0;
@@ -509,6 +516,7 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 
 		mdelay(50);
 	}
+#endif/*niuli delete for bllp mode on*/
 /*TYRD wuxh add begin for ssd lcd on 20140123*/
 
 	pr_err("%s:-\n", __func__);

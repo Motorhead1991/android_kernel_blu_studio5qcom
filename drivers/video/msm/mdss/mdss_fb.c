@@ -848,6 +848,15 @@ static int mdss_fb_blank_sub(int blank_mode, struct fb_info *info,
 	case FB_BLANK_UNBLANK:
 		if (!mfd->panel_power_on && mfd->mdp.on_fnc) {
 			ret = mfd->mdp.on_fnc(mfd);
+			//niuli add cta esd recovery 20140708
+			#if defined(TYQ_CTA_ESD_SUPPORT)
+			if((mfd->bl_level)&&(true== mfd->panel_info->panel_dead))
+			{
+			       pr_err("%s:+++ bl_level = %d  bl_level_old=%d\n",__func__,mfd->bl_level,mfd->bl_level_old);
+				mdss_fb_set_backlight(mfd,mfd->bl_level);
+			}
+			#endif
+			//niuli add cta esd recovery 20140708 end
 			if (ret == 0) {
 				mfd->panel_power_on = true;
 				mfd->panel_info->panel_dead = false;
@@ -881,11 +890,14 @@ static int mdss_fb_blank_sub(int blank_mode, struct fb_info *info,
 			mfd->no_update.value = NOTIFY_TYPE_SUSPEND;
 			complete(&mfd->no_update.comp);
 			/*TYRD wuxh add begin for white lcd blink when poweroff on 20140123*/
+			#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
+			#else
 			if(mfd->bl_level)
 			{
 				mdss_fb_set_backlight(mfd,0);
 			
 			}
+			#endif
 			/*TYRD wuxh add end for white lcd blink when poweroff on 20140123*/
 			mfd->op_enable = false;
 			curr_pwr_state = mfd->panel_power_on;

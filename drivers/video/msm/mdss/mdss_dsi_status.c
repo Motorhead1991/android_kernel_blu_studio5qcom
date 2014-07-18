@@ -30,7 +30,12 @@
 #include "mdss_panel.h"
 #include "mdss_mdp.h"
 
+//niuli add cta esd recovery 20140708
+#if defined(TYQ_CTA_ESD_SUPPORT)
+#define STATUS_CHECK_INTERVAL 2000
+#else
 #define STATUS_CHECK_INTERVAL 5000
+#endif
 
 struct dsi_status_data {
 	struct notifier_block fb_notifier;

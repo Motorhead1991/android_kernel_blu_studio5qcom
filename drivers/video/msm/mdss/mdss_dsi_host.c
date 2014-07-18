@@ -625,10 +625,20 @@ void mdss_dsi_cmd_bta_sw_trigger(struct mdss_panel_data *pdata)
 	pr_debug("%s: BTA done, status = %d\n", __func__, status);
 }
 
+//niuli add cta esd recovery 20140708
+#if defined(TYQ_CTA_ESD_SUPPORT)
+static char rbuf2[20] = {0};
+extern u32 mdss_dsi_panel_cmd_read(struct mdss_dsi_ctrl_pdata *ctrl, char cmd0,
+		char cmd1, void (*fxn)(int), char *rbuf, int len);
+#endif
 int mdss_dsi_bta_status_check(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 {
 	int ret = 0;
 	unsigned long flag;
+//niuli add cta esd recovery 20140708
+#if defined(TYQ_CTA_ESD_SUPPORT)
+u32 data;
+#endif
 
 	if (ctrl_pdata == NULL) {
 		pr_err("%s: Invalid input data\n", __func__);
@@ -643,6 +653,15 @@ int mdss_dsi_bta_status_check(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 
 	pr_debug("%s: Checking BTA status\n", __func__);
 
+//niuli add cta esd recovery 20140708
+#if defined(TYQ_CTA_ESD_SUPPORT)
+	data = MIPI_INP((ctrl_pdata->ctrl_base) + 0x0110);
+
+	if(!(data & DSI_INTR_CMD_DMA_DONE_MASK)){
+		pr_info("Continuous splash is not finish, DSI CTRL is not ready.\n");
+		return 1;
+	}
+#else
 	mdss_dsi_clk_ctrl(ctrl_pdata, 1);
 	spin_lock_irqsave(&ctrl_pdata->mdp_lock, flag);
 	INIT_COMPLETION(ctrl_pdata->bta_comp);
@@ -659,7 +678,25 @@ int mdss_dsi_bta_status_check(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 	}
 
 	mdss_dsi_clk_ctrl(ctrl_pdata, 0);
+	#endif
 	pr_debug("%s: BTA done with ret: %d\n", __func__, ret);
+//niuli add cta esd recovery 20140708
+#if defined(TYQ_CTA_ESD_SUPPORT)
+	flag = 1;
+
+	memset(rbuf2, 0x0, sizeof(rbuf2));
+
+	mdss_dsi_clk_ctrl(ctrl_pdata,1);
+	mdss_dsi_panel_cmd_read(ctrl_pdata,0x0a,0,NULL,rbuf2,1);
+	mdss_dsi_clk_ctrl(ctrl_pdata,0);
+printk("$$$ read 0x0a value=%x\n",rbuf2[0]);
+if(rbuf2[0]==0x1c)
+	ret =1;
+else
+       ret = -1;
+
+pr_debug("%s: Checking BTA status ret=%d\n", __func__,ret);
+#endif
 
 	return ret;
 }
@@ -881,7 +918,12 @@ int mdss_dsi_cmds_rx(struct mdss_dsi_ctrl_pdata *ctrl,
 		MIPI_OUTP((ctrl->ctrl_base) + 0x0004, data);
 	}
 
+/*niuli for dcs bl ctrl*/
+#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
+	if (rlen <= 2) {
+#else
 	if (rlen == 0) {
+#endif
 		short_response = 1;
 		rx_byte = 4;
 	} else {
