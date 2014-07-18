@@ -123,11 +123,13 @@ u8 searching_file = 0;
 extern u8 config[GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH];
 extern void gtp_reset_guitar(struct i2c_client *client, s32 ms);
 extern s32  gtp_send_cfg(struct i2c_client *client);
+extern u8 reset_config_ver(struct goodix_ts_data *ts);
 extern s32 gtp_read_version(struct i2c_client *, u16* );
 extern struct i2c_client *i2c_connect_client;
 extern void gtp_irq_enable(struct goodix_ts_data *ts);
 extern void gtp_irq_disable(struct goodix_ts_data *ts);
 extern s32 gtp_i2c_read_dbl_check(struct i2c_client *, u16, u8 *, int);
+extern s32 gtp_i2c_read(struct i2c_client *client, u8 *buf, s32 len);
 static u8 gup_burn_fw_gwake_section(struct i2c_client *client, u8 *fw_section, u16 start_addr, u32 len, u8 bank_cmd );
 
 #define _CLOSE_FILE(p_file) if (p_file && !IS_ERR(p_file)) \
@@ -740,8 +742,12 @@ s8 gup_update_config_file(struct i2c_client *client, char* cfg_buf,int buf_len)
 	s32 i = 0;
 	s32 chip_cfg_len = 0;
 	u8 pid[8];
+	struct goodix_ts_data *ts = NULL;
+    ts = i2c_get_clientdata(i2c_connect_client);
 
-	
+	GTP_INFO("enson:GTP update config begin\n");
+	ts->enter_update = 1;
+	gtp_irq_disable(ts);
 	ret = gup_get_ic_msg(client, GUP_REG_PID_VID, pid, 6);
 	if(FAIL == ret)
 	{
@@ -754,7 +760,8 @@ s8 gup_update_config_file(struct i2c_client *client, char* cfg_buf,int buf_len)
 	chip_cfg_len = 186;
 	if(!memcmp(&pid[GTP_ADDR_LENGTH], "968", 3) || 
 	   !memcmp(&pid[GTP_ADDR_LENGTH], "910", 3) ||
-	   !memcmp(&pid[GTP_ADDR_LENGTH], "960", 3))
+	   !memcmp(&pid[GTP_ADDR_LENGTH], "960", 3) ||
+	   !memcmp(&pid[GTP_ADDR_LENGTH], "917", 3))
 	{
 	    chip_cfg_len = 228;
 	}
@@ -781,7 +788,10 @@ s8 gup_update_config_file(struct i2c_client *client, char* cfg_buf,int buf_len)
 	    GTP_ERROR("[update_cfg]Send config i2c error.");
 	}
 
-
+	msleep(200);
+	ts->enter_update = 0;
+	gtp_irq_enable(ts);
+	GTP_INFO("enson:GTP update config done\n");
 	return ret;
 }
 #endif
@@ -3648,6 +3658,146 @@ static char* gtp_load_section_file(u32 offset, u8 set_or_end)
 	return p;
 }
 
+/*TYDRV:liujie add this function 20140711*/
+static s32 init_panel_after_update(struct goodix_ts_data *ts)
+{
+    s32 ret = -1;
+    s32 i = 0;
+    u8 sensor_id = 0;
+	u8 check_sum = 0;
+	int cfg_id = 0;
+	char *config_data = NULL;
+   
+
+    if (1 == ts->pdata->cfg_count[0])
+    {
+        cfg_id = 0;
+		sensor_id = ts->pdata->cfg_count[1];
+		ts->config_data = ts->pdata->config_data[0];
+		ts->gtp_cfg_len = ts->pdata->config_data_len[0];
+    }
+    else
+    {
+        ret = gtp_i2c_read_dbl_check(ts->client, GTP_REG_SENSOR_ID, &sensor_id, 1);
+        if (SUCCESS == ret)
+        {
+            /*if ((sensor_id > (GOODIX_MAX_CFG_GROUP-1))||(sensor_id < 0))
+            {
+                GTP_ERROR("enson:GTP Invalid sensor_id(0x%02X), so we choose the cfg-data%d!\n", sensor_id,ts->pdata->cfg_count[1]);
+				cfg_id = 0;
+				sensor_id = ts->pdata->cfg_count[1];
+                ts->pnl_init_error = 1;
+            }
+			else
+			{*/
+				for(i=0;i<ts->pdata->cfg_count[0];i++)
+				{
+					if(ts->pdata->cfg_count[i+1] == sensor_id)
+					{
+						cfg_id = i;
+						break;
+					}
+				}
+				if(i == ts->pdata->cfg_count[0])
+				{
+					cfg_id = 0;
+					GTP_ERROR("enson:GTP no sensor_id(0x%02X)'cfg, so we choose the cfg-data%d!\n", sensor_id,ts->pdata->cfg_count[1]);
+				}
+			//}
+			for(i = 0;i < ts->pdata->cfg_count[0];i++)
+			{
+				if(i != cfg_id)
+				{
+					kfree(ts->pdata->config_data[i]);
+				}
+			}
+			ts->config_data = ts->pdata->config_data[cfg_id];
+			ts->gtp_cfg_len = ts->pdata->config_data_len[cfg_id];
+        }
+        else
+        {
+            GTP_ERROR("Failed to get sensor_id, No config sent!");
+			cfg_id = 0;
+			for(i = 0;i < ts->pdata->cfg_count[0];i++)
+			{
+				if(i != cfg_id)
+				{
+					kfree(ts->pdata->config_data[i]);
+				}
+			}
+			ts->config_data = ts->pdata->config_data[cfg_id];
+			ts->gtp_cfg_len = ts->pdata->config_data_len[cfg_id];
+            ts->pnl_init_error = 1;
+			return -1;
+        }
+    }
+    GTP_INFO("enson:GTP sensor id = %d, config length: %d\n", sensor_id, ts->gtp_cfg_len);
+    
+    if (ts->gtp_cfg_len < (GTP_CONFIG_MIN_LENGTH - GTP_ADDR_LENGTH))
+    {
+        GTP_ERROR("Config Group%d is INVALID CONFIG GROUP(Len: %d)! NO Config Sent! You need to check you header file CFG_GROUP section!", sensor_id+1, ts->gtp_cfg_len);
+        ts->pnl_init_error = 1;
+        return -1;
+    }
+
+	config_data = kzalloc(ts->gtp_cfg_len,GFP_KERNEL);
+	if(NULL == config_data)
+	{
+		GTP_ERROR("enson:GTP kzalloc failed in init panel\n");
+		return -1;
+	}
+	config_data[0] = GTP_REG_CONFIG_DATA >> 8;
+	config_data[1] = GTP_REG_CONFIG_DATA & 0xFF;
+    ret = gtp_i2c_read(ts->client, config_data, ts->gtp_cfg_len);
+    if (ret == 2)
+    {
+        GTP_DEBUG("CFG_GROUP%d Config Version: %d, IC Config Version: %d", sensor_id+1, 
+                    ts->config_data[GTP_ADDR_LENGTH], config_data[0]);
+        if(config_data[GTP_ADDR_LENGTH]< 90)
+		{
+			for (i = GTP_ADDR_LENGTH; i < (ts->gtp_cfg_len - 2); i++)
+		    {
+		        check_sum += config_data[i];
+		    }
+			if(config_data[ts->gtp_cfg_len-2] != (u8)((~check_sum) + 1))
+			{
+				GTP_INFO("enson:GTP IC's config data checkout error,to reset version");
+				ret = reset_config_ver(ts);
+				if(0 == ret)
+				{
+					ts->cfg_reset = 1;
+				}
+			}
+		}
+		else
+		{
+			GTP_INFO("enson:GTP IC's config version abnormal,to reset it");
+			ret = reset_config_ver(ts);
+			if(0 == ret)
+			{
+				ts->cfg_reset = 1;
+			}
+		}
+    }
+    else
+    {
+        GTP_ERROR("enson:GTP in %s Failed to get ic config version!No config sent!",__func__);
+        return -1;
+    }
+	kfree(config_data);
+    ret = gtp_send_cfg(ts->client);
+    if (ret < 0)
+    {
+        GTP_ERROR("Send config error.");
+    }
+ 
+    msleep(200);
+    return 0;
+}
+
+
+
+
 static u8 gtp_burn_fw_finish(struct i2c_client *client)
 {
     u8* fw_ss51 = NULL;
@@ -4385,14 +4535,17 @@ int gtp_update_proc(void *dir)
 	
     ts = i2c_get_clientdata(i2c_connect_client);
 
-    ts->enter_update = 1;
+/*if need to use these codes we need to modify gup_fw_download_proc()
+  *liujie mark this 20140711*/
+#if 0
 #if GTP_COMPATIBLE_MODE
     if (CHIP_TYPE_GT9F == ts->chip_type)
     {
         return gup_fw_download_proc(dir, GTP_FL_FW_BURN);
     }
 #endif
-
+#endif
+	ts->enter_update = 1;
     gtp_irq_disable(ts);
 #if GTP_ESD_PROTECT
     gtp_esd_switch(ts->client, SWITCH_OFF);
@@ -4488,7 +4641,8 @@ update_fail:
         if (ts->fw_error)
         {
             GTP_INFO("firmware error auto update, resent config!");
-            gup_init_panel(ts);
+			ts->fw_error = 0;
+            init_panel_after_update(ts);
         }
         else
         {
@@ -4496,12 +4650,10 @@ update_fail:
             ret = gtp_send_cfg(i2c_connect_client);
             if (ret < 0)
             {
-                GTP_ERROR("[update_proc]send config fail.");
+                GTP_ERROR("enson:GTP [update_proc]send config fail.");
             }
-            else
-            {
-                msleep(100);
-            }
+            msleep(200);
+
         }
     }
     ts->enter_update = 0;

@@ -1372,6 +1372,7 @@ static s8 gtp_wakeup_sleep(struct goodix_ts_data * ts)
     return ret;
 }
 #if GTP_DRIVER_SEND_CFG
+#if 0
 static s32 gtp_get_info(struct goodix_ts_data *ts)
 {
     u8 opr_buf[6] = {0};
@@ -1408,7 +1409,39 @@ static s32 gtp_get_info(struct goodix_ts_data *ts)
     
     return SUCCESS;    
 }
+#endif
 #endif 
+
+/*TYDRV:liujie add this function to reset IC config version to 0x00*/
+u8 reset_config_ver(struct goodix_ts_data *ts)
+{
+	u8 ic_ver = 0;
+	u8 check_sum = 0;
+	u8 check = 0;
+	u8 cfg_ver = 0;
+	int i = 0;
+	int ret = 0;
+	
+	cfg_ver = ts->config_data[GTP_ADDR_LENGTH];
+	check   = ts->config_data[ts->gtp_cfg_len-2];
+	ts->config_data[GTP_ADDR_LENGTH] = 0;
+	for (i = GTP_ADDR_LENGTH; i < (ts->gtp_cfg_len - 2); i++)
+    {
+        check_sum += ts->config_data[i];
+    }
+    ts->config_data[ts->gtp_cfg_len-2] = (~check_sum) + 1;
+	ret = gtp_send_cfg(ts->client);
+    if (ret < 0)
+    {
+    	ic_ver = 1;
+        GTP_ERROR("enson:GTP Send config error in reset cfg version.");
+    }
+	ts->config_data[GTP_ADDR_LENGTH] = cfg_ver;
+    ts->config_data[ts->gtp_cfg_len-2] = check;
+	msleep(400);
+	return ic_ver;
+}
+
 
 /*******************************************************
 Function:
@@ -1422,13 +1455,16 @@ Output:
 static s32 gtp_init_panel(struct goodix_ts_data *ts)
 {
     s32 ret = -1;
-
+	
 #if GTP_DRIVER_SEND_CFG
     s32 i = 0;
-    u8 opr_buf[16] = {0};
-    u8 sensor_id = 0; 
+    u8 opr_buf = 0;
+	u8 ic_cfg_ver = 0;
+    u8 sensor_id = 0;
+	u8 check_sum = 0;
+	char *config_data = NULL;
 	int cfg_id = 0;
-    
+
 #if GTP_COMPATIBLE_MODE
     if (CHIP_TYPE_GT9F == ts->chip_type)
     {
@@ -1437,14 +1473,14 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
     else
 #endif
     {
-        ret = gtp_i2c_read_dbl_check(ts->client, 0x41E4, opr_buf, 1);
+        ret = gtp_i2c_read_dbl_check(ts->client, 0x41E4, &opr_buf, 1);
         if (SUCCESS == ret) 
         {
-            if (opr_buf[0] != 0xBE)
+            if (opr_buf != 0xBE)
             {
                 ts->fw_error = 1;
                 GTP_ERROR("enson:GTP Firmware error,need to repair!");
-                //return -1; //liujie remove
+                return 0; //liujie edit it
             }
         }
     }
@@ -1531,12 +1567,21 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
     else
 #endif
     {
-        ret = gtp_i2c_read_dbl_check(ts->client, GTP_REG_CONFIG_DATA, &opr_buf[0], 1);
-        if (ret == SUCCESS)
+    	config_data = kzalloc(ts->gtp_cfg_len,GFP_KERNEL);
+		if(NULL == config_data)
+		{
+			GTP_ERROR("enson:GTP kzalloc failed in init panel\n");
+			return -1;
+		}
+		config_data[0] = GTP_REG_CONFIG_DATA >> 8;
+		config_data[1] = GTP_REG_CONFIG_DATA & 0xFF;
+        ret = gtp_i2c_read(ts->client,config_data, ts->gtp_cfg_len);
+		if (ret == 2)
         {
  			GTP_DEBUG("CFG_GROUP%d Config Version: %d, 0x%02X; IC Config Version: %d, 0x%02X", sensor_id+1, 
-                       ts->config_data[GTP_ADDR_LENGTH], ts->config_data[GTP_ADDR_LENGTH], opr_buf[0], opr_buf[0]);
-            
+                       ts->config_data[GTP_ADDR_LENGTH], ts->config_data[GTP_ADDR_LENGTH], config_data[0], config_data[0]);
+/*TYDRV:liujie edit it to check config ,make sure it is ok 20140711*/
+#if 0            
             if (opr_buf[0] < 90)    
             {
                 ts->fixed_cfg = 0;
@@ -1548,12 +1593,49 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
                 gtp_get_info(ts);
                 return 0;
             }
+#endif
+			if(config_data[GTP_ADDR_LENGTH]< 90)
+			{
+				ic_cfg_ver = config_data[GTP_ADDR_LENGTH];
+				for (i = GTP_ADDR_LENGTH; i < (ts->gtp_cfg_len - 2); i++)
+			    {
+			        check_sum += config_data[i];
+			    }
+				if(config_data[ts->gtp_cfg_len-2] != (u8)((~check_sum) + 1))
+				{
+					GTP_INFO("enson:GTP IC's config data checkout error,to reset version");
+					ic_cfg_ver = reset_config_ver(ts);
+					if(ic_cfg_ver)
+					{
+						ic_cfg_ver = config_data[GTP_ADDR_LENGTH];
+					}
+					else
+					{
+						ts->cfg_reset = 1;
+					}
+				}
+			}
+			else
+			{
+				GTP_INFO("enson:GTP IC's config version abnormal,to reset it");
+				ic_cfg_ver = reset_config_ver(ts);
+				if(ic_cfg_ver)
+				{
+					ic_cfg_ver = config_data[GTP_ADDR_LENGTH];
+				}
+				else
+				{
+					ts->cfg_reset = 1;
+				}
+			}
+			
         }
         else
         {
             GTP_ERROR("Failed to get ic config version!No config sent!");
             return -1;
         }
+		kfree(config_data);
     }
 
 #if GTP_CUSTOM_CFG
@@ -1589,13 +1671,6 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
     }
     
 #endif // GTP_DRIVER_SEND_CFG
-
-    if ((ts->pdata->abs_x_max == 0) && (ts->pdata->abs_y_max == 0))
-    {
-        ts->pdata->abs_x_max = (ts->config_data[RESOLUTION_LOC + 1] << 8) + ts->config_data[RESOLUTION_LOC];
-        ts->pdata->abs_y_max = (ts->config_data[RESOLUTION_LOC + 3] << 8) + ts->config_data[RESOLUTION_LOC + 2];
-        ts->pdata->int_trigger_type = (ts->config_data[TRIGGER_LOC]) & 0x03; 
-    }
 
 #if GTP_COMPATIBLE_MODE
     if (CHIP_TYPE_GT9F == ts->chip_type)
@@ -1642,7 +1717,7 @@ static s32 gtp_init_panel(struct goodix_ts_data *ts)
 		}
 /*TYDRV:liujie add to compare the cfg version, if file version is lower 
   * then the ic cfg version,we do not send it 20140630*/
-		if(opr_buf[0] >= ts->config_data[GTP_ADDR_LENGTH])
+		if(ic_cfg_ver >= ts->config_data[GTP_ADDR_LENGTH])
 		{
 			return 0;
 		}
@@ -2864,14 +2939,14 @@ static int touch_GetCFGVer(void)
 	#endif
 	ret = gtp_i2c_read_dbl_check(i2c_connect_client, GTP_REG_CONFIG_DATA, &config_version, 1);
 	if (ret == SUCCESS)
-    	{
-        	GTP_DEBUG("IC Config Version: %d",config_version); 
-    	}
-    	else
-    	{
-        	GTP_ERROR("Failed to get ic config version!No config sent!");
-        	return -1;
-    	}
+	{
+    	GTP_DEBUG("IC Config Version: %d",config_version); 
+	}
+	else
+	{
+    	GTP_ERROR("Failed to get ic config version!No config sent!");
+    	return -1;
+	}
 	return config_version;
 	
 }
@@ -2880,16 +2955,25 @@ static int touch_GetFWVer(void)
 {	
 	int ret;
 	u16 firmware_version = 0;
-	u8 firmware_l[GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH] = {0x81, 0x44};
-	u8 firmware_h[GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH] = {0x81, 0x45};
+	//u8 firmware_l[GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH] = {0x81, 0x44};
+	//u8 firmware_h[GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH] = {0x81, 0x45};
+	/*TYDRV:liujie change the buffer's length 20140711*/
+	u8 firmware_l[1 + GTP_ADDR_LENGTH] = {0x81, 0x44};
+	u8 firmware_h[1 + GTP_ADDR_LENGTH] = {0x81, 0x45};
+	struct goodix_ts_data *ts = NULL;
 	
 	if((NULL == i2c_connect_client))
 	{
 		pr_err("%s:i2c_connect_client is null.\n",__func__);
 		return 0;
 	}
-	
-	mdelay(50);
+	ts = i2c_get_clientdata(i2c_connect_client);
+	if(ts->fw_error)
+	{
+		firmware_version = 0xA6;
+		return firmware_version;
+	}
+	//mdelay(50); //liujie remove it
 	ret = gtp_i2c_read(i2c_connect_client, firmware_h, sizeof(firmware_h));
 	if(ret< 0)
 	{
@@ -3024,6 +3108,7 @@ typedef struct ty_touch_fmupgrade_S
 #define	TYN_TOUCH_CONFIG_UPGRADE	 (TYN_TOUCH_FMUPGRADE +3)
 #define	TYN_TOUCH_CFGVER 	 (TYN_TOUCH_FMUPGRADE +4)
 #define TYN_TOUCH_IC_TYPE	(TYN_TOUCH_FMUPGRADE +5)
+#define TY_GTP_IC_VERSION_VENDOR (TYN_TOUCH_FMUPGRADE + 6)
 
 //tp vendor
 #define TYN_TOUCH_FOCALTECH    1
@@ -3035,6 +3120,9 @@ typedef struct ty_touch_fmupgrade_S
 #define FTS_TP_ID	2//wang_gj
 #define MSG_TP_ID	3 
 #define GOODIX_TP_ID	4
+
+#define FW_HEAD_LENGTH          14
+
 
 static struct touch_ctrl_dev
 {
@@ -3073,7 +3161,34 @@ u8 gtp_get_vendor_id(void)
 	return vendor_id;
 }
 
-#define FW_HEAD_LENGTH               14
+
+/*TYDRV:liujie add this function to get IC family and vendor 20140715*/
+s32 gtp_get_ic_family_vendor(struct i2c_client *client, u8 *pbuf)
+{
+    s32 ret = -1;
+    u8 buf[8] = {GTP_REG_VERSION >> 8, GTP_REG_VERSION & 0xff};
+    ret = gtp_i2c_read(client, buf, sizeof(buf));
+    if (ret < 0)
+    {
+        GTP_ERROR("GTP read version failed");
+        return ret;
+    }
+    if (buf[5] == 0x00)
+    {
+    	pbuf[0] = 0x3;
+		memcpy(pbuf+1,buf+2,3);
+    }
+    else
+    {
+    	pbuf[0] = 0x4;
+		memcpy(pbuf+1,buf+2,4);
+    }
+	pbuf[5]= gtp_get_vendor_id();
+	
+    return ret;
+}
+
+
 /*TYDRV: liujie modify this function  20140516*/
 static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long arg)
 {
@@ -3111,10 +3226,9 @@ static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long
 		case TYN_TOUCH_FWVER:
 			if(sizeof(unsigned long)!=bufarg.bufLength)
 			{
-				printk("%s:bufLength null pointer.\n",__func__);
+				printk("%s:bufLength is error.\n",__func__);
 				return -EFAULT;
 			}
-			
 			//get firmware version
 	#if defined(NV_TOUCH_FT)
 			ulVer =touch_GetFWVer();
@@ -3144,6 +3258,21 @@ static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long
 			{
 				printk("%s:bufLength null pointer.\n",__func__);
 				return -EFAULT;
+			}
+			ts = i2c_get_clientdata(i2c_connect_client);
+			if(ts->cfg_reset)
+			{
+				ulVer = 0xA6;
+				if(copy_to_user(argp->bufAddr,&ulVer,sizeof(ulVer)))
+				{
+					printk("%s:get buffer error.\n",__func__);
+					return -EAGAIN;
+				}
+				else
+				{
+					ts->cfg_reset = 0;
+					return 0;
+				}
 			}
 			//get firmware cfg version
 	#if defined(NV_TOUCH_FT)
@@ -3247,15 +3376,38 @@ static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long
     #endif
 			if( pBuf ) kfree(pBuf);
 			break;
+	case TY_GTP_IC_VERSION_VENDOR:
+			if(bufarg.bufLength < 6)
+			{
+				printk("enson:GTP get ic_version_vendor buf len error!\n");
+				return -1;
+			}
+			pBuf = kzalloc(bufarg.bufLength, GFP_KERNEL);
+			if(NULL == pBuf)
+			{
+				printk("%s:alloc buffer failed.\n",__func__);
+				return -1;
+			}
+			iret = gtp_get_ic_family_vendor(i2c_connect_client,pBuf);
+			if(iret < 0)
+			{
+				return -1;
+			}
+			if(copy_to_user(bufarg.bufAddr,pBuf,bufarg.bufLength))
+			{
+				printk("%s:get buffer error.\n",__func__);
+				return -EAGAIN;
+			}
+			kfree(pBuf);
+			break;
 	#if 1
 	case TYN_TOUCH_VENDOR:
-			msleep(200);
+			//msleep(200);
 			vendor = gtp_get_vendor_id();
 			#if defined (TYQ_TBT5971_QHD_SUPPORT)
 			if(vendor ==4)
 				vendor = O_FILM_VENDOR_ID_NO;
 			#endif
-			printk("pengwei test touch vendor id is %d",vendor);
 			if(vendor==TRUlY_VENDOR_ID_NO)
 			{
 				if(copy_to_user(bufarg.bufAddr,TRUlY_VENDOR_ID_STR,strlen(TRUlY_VENDOR_ID_STR)))
@@ -3703,7 +3855,7 @@ Output:
     {
         GTP_ERROR("GTP request input dev failed");
     }
-    ret = gtp_request_irq(ts); 
+    ret = gtp_request_irq(ts);
     if (ret < 0)
     {
         GTP_INFO("GTP works in polling mode.");
@@ -3920,7 +4072,7 @@ static void goodix_ts_suspend(struct goodix_ts_data *ts)
 {
 	int ret = -1;
 
-	if (ts->suspended) {
+	if (ts->gtp_is_suspend) {
 		return ;
 	}
 	//mutex_lock(&ts->lock);
@@ -3953,8 +4105,6 @@ static void goodix_ts_suspend(struct goodix_ts_data *ts)
     // to avoid waking up while not sleeping
     //  delay 48 + 10ms to ensure reliability    
     msleep(58);
-	/*TYDRV:liujie add for tp status flag*/
-	ts->suspended = true;
 	//mutex_unlock(&ts->lock);
 }
 
@@ -3975,7 +4125,7 @@ static void goodix_ts_resume(struct goodix_ts_data *ts)
     
     //GTP_INFO("System resume.");
     /*DYDRV:liujie add for sostenuto cmd 20140630*/
-    if (!ts->suspended) {
+    if (!ts->gtp_is_suspend) {
 		return ;
 	}
     ret = gtp_wakeup_sleep(ts);
@@ -4013,7 +4163,6 @@ static void goodix_ts_resume(struct goodix_ts_data *ts)
 #if GTP_ESD_PROTECT
     gtp_esd_switch(ts->client, SWITCH_ON);
 #endif
-	ts->suspended =false;
 	//mutex_unlock(&ts->lock);
 }
 

@@ -123,12 +123,12 @@ struct goodix_ts_data {
     u8  fixed_cfg;
     u8  fw_error;
     u8  pnl_init_error;
+	u8  cfg_reset;  //liujie add it
 	int  gtp_cfg_len;
 	bool  gtp_rawdiff_mode; //liujie change it from u8 to bool
     struct regulator *vdd;
 	struct regulator *vcc_i2c;
 	bool power_on;
-	bool suspended;
 /*TYDRV:liujie add these for update up fw&cfg 20140707*/
 #if TY_TP_IOCTRL
     bool is_compare_version;
