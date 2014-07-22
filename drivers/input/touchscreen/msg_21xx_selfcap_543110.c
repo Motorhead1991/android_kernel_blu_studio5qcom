@@ -101,6 +101,8 @@ extern unsigned char ft_probe_flag;
 #define O_FILM_VENDOR_ID_STR		"O-FILM_TP"
 #define TRUST_VENDOR_ID_NO		0x0d
 #define TRUST_VENDOR_ID_STR		"TRUST"
+#define HOLITECH_VENDOR_ID_NO		0x0A
+#define HOLITECH_VENDOR_ID_STR		"HOLITECH_TP"
 
 struct ty_touch_fmupgrade_S
 {
@@ -1636,7 +1638,7 @@ static u16 _GetVendorID ( EMEM_TYPE_t emem_type )
 	
     if((dbbus_rx_data[0]>=0x30 && dbbus_rx_data[0]<=0x39)
     &&(dbbus_rx_data[1]>=0x30 && dbbus_rx_data[1]<=0x39)
-    &&(dbbus_rx_data[2]>=0x31 && dbbus_rx_data[2]<=0x39))  
+    &&(dbbus_rx_data[2]>=0x30 && dbbus_rx_data[2]<=0x39))  
     {
     	ret=(dbbus_rx_data[0]-0x30)*100+(dbbus_rx_data[1]-0x30)*10+(dbbus_rx_data[2]-0x30);
     }
@@ -2888,7 +2890,6 @@ static int __devinit msg21xx_probe(struct i2c_client *client, const struct i2c_d
 		msg_vendor_id = _GetVendorID(EMEM_INFO);
 
 	}
-	printk("msg_vendor_id = %d\n",msg_vendor_id);
 #if defined(TYQ_MSG_TP_I2C_SPEED_100K)
 			ty_chage_i2c_speed_rate(client->adapter,100000);
 #endif
@@ -3287,6 +3288,13 @@ static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long
 			else if(mVer == TRUST_VENDOR_ID_NO )
 			{	
 				if(copy_to_user(bufarg.bufAddr,TRUST_VENDOR_ID_STR,strlen(TRUST_VENDOR_ID_STR)))
+				{
+					printk("%s:get tp_vendor info err!\n",__func__);
+				}
+			}
+			else if(mVer == HOLITECH_VENDOR_ID_NO )
+			{	
+				if(copy_to_user(bufarg.bufAddr,HOLITECH_VENDOR_ID_STR,strlen(HOLITECH_VENDOR_ID_STR)))
 				{
 					printk("%s:get tp_vendor info err!\n",__func__);
 				}
