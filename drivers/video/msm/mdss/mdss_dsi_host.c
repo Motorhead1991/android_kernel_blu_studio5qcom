@@ -918,12 +918,7 @@ int mdss_dsi_cmds_rx(struct mdss_dsi_ctrl_pdata *ctrl,
 		MIPI_OUTP((ctrl->ctrl_base) + 0x0004, data);
 	}
 
-/*niuli for dcs bl ctrl*/
-#if defined(TYQ_6INCH_TRULY_R63315_1080P_LCD_SUPPORT)
 	if (rlen <= 2) {
-#else
-	if (rlen == 0) {
-#endif
 		short_response = 1;
 		rx_byte = 4;
 	} else {
