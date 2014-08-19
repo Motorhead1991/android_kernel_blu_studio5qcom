@@ -335,7 +335,11 @@ qpnp_rtc_set_alarm(struct device *dev, struct rtc_wkalrm *alarm)
 	}
 
 	rtc_dd->alarm_ctrl_reg1 = ctrl_reg;
-
+//xiangdong add alarm log for trace	
+	printk("Alarm Set for secs = %lu, h:r:s=%d:%d:%d, d/m/y=%d/%d/%d\n",
+			secs, alarm->time.tm_hour, alarm->time.tm_min,
+			alarm->time.tm_sec, alarm->time.tm_mday,
+			alarm->time.tm_mon, alarm->time.tm_year);
 	dev_dbg(dev, "Alarm Set for h:r:s=%d:%d:%d, d/m/y=%d/%d/%d\n",
 			alarm->time.tm_hour, alarm->time.tm_min,
 			alarm->time.tm_sec, alarm->time.tm_mday,
@@ -404,6 +408,8 @@ qpnp_rtc_alarm_irq_enable(struct device *dev, unsigned int enabled)
 
 	/* Clear Alarm register */
 	if (!enabled) {
+//xiangdong add alarm log for trace
+		printk("Clear ALARM in IRQ function\n");
 		rc = qpnp_write_wrapper(rtc_dd, value,
 			rtc_dd->alarm_base + REG_OFFSET_ALARM_RW,
 			NUM_8_BIT_RTC_REGS);
