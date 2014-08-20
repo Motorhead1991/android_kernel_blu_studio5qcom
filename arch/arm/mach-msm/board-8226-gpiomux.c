@@ -817,6 +817,10 @@ static struct msm_gpiomux_config msm_auxpcm_configs[] __initdata = {
 			[GPIOMUX_ACTIVE] = &auxpcm_act_cfg,
 		},
 	},
+/*gaohw modify for gpio flash ctl begin*/
+#ifdef	CONFIG_LEDS_MSM_GPIO_FLASH
+
+#else
 	{
 		.gpio = 66,
 		.settings = {
@@ -824,6 +828,8 @@ static struct msm_gpiomux_config msm_auxpcm_configs[] __initdata = {
 			[GPIOMUX_ACTIVE] = &auxpcm_act_cfg,
 		},
 	},
+ #endif
+ /*gaohw modify for gpio flash ctl end*/
 };
 
 static struct gpiomux_setting usb_otg_sw_cfg = {

@@ -151,13 +151,24 @@ int __devinit led_gpio_flash_probe(struct platform_device *pdev)
 			goto error;
 		}
 	}
+/*gaohw modify for gpio flash ctl begin*/
+#ifdef	CONFIG_LEDS_MSM_GPIO_FLASH
+	gpio_tlmm_config(GPIO_CFG(flash_led->flash_en, 0,
+				  GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN,
+				  GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+	gpio_tlmm_config(GPIO_CFG(flash_led->flash_now, 0,
+				  GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN,
+				  GPIO_CFG_2MA), GPIO_CFG_ENABLE);
 
+#else
 	gpio_tlmm_config(GPIO_CFG(flash_led->flash_en, 0,
 				  GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL,
 				  GPIO_CFG_2MA), GPIO_CFG_ENABLE);
 	gpio_tlmm_config(GPIO_CFG(flash_led->flash_now, 0,
 				  GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL,
 				  GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+#endif
+/*gaohw modify for gpio flash ctl end*/
 
 	rc = of_property_read_string(node, "linux,name", &flash_led->cdev.name);
 	if (rc) {
