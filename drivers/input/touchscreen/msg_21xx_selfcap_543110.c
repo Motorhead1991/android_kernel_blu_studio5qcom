@@ -2794,6 +2794,8 @@ static int msg21xx_init_input(void)
 	
 	#ifdef TYQ_TP_ANDROID4_0_SUPPORT
 	set_bit(INPUT_PROP_DIRECT,input->propbit);
+	/*TYDRV:liujie add this for qcom factory test 20140821*/
+	set_bit(EV_KEY, input->evbit);
 	#else
 	set_bit(EV_KEY, input->evbit);
 	set_bit(BTN_TOUCH, input->keybit);
