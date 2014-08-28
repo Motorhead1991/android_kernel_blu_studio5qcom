@@ -3167,6 +3167,14 @@ s32 gtp_get_ic_family_vendor(struct i2c_client *client, u8 *pbuf)
 {
     s32 ret = -1;
     u8 buf[8] = {GTP_REG_VERSION >> 8, GTP_REG_VERSION & 0xff};
+	struct goodix_ts_data *ts = NULL;
+	
+	ts = i2c_get_clientdata(client);
+	if(ts->fw_error)
+	{
+		pbuf[0] = 0xF;
+		return 0;
+	}
     ret = gtp_i2c_read(client, buf, sizeof(buf));
     if (ret < 0)
     {
@@ -3219,7 +3227,8 @@ static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long
 		return -EFAULT;
 	}
 	printk("enson_%s:cmd=0x%x.\n",__func__,cmd);
-	
+
+	ts = i2c_get_clientdata(i2c_connect_client);
 	switch (cmd) 
 	{
 		#if 1
@@ -3228,6 +3237,16 @@ static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long
 			{
 				printk("%s:bufLength is error.\n",__func__);
 				return -EFAULT;
+			}
+			if(ts->fw_error)
+			{
+				ulVer = 0xA6;
+				if(copy_to_user(bufarg.bufAddr,&ulVer,sizeof(ulVer)))
+				{
+					printk("%s:get buffer error.\n",__func__);
+					return -EAGAIN;
+				}
+				return 0;
 			}
 			//get firmware version
 	#if defined(NV_TOUCH_FT)
@@ -3259,7 +3278,16 @@ static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long
 				printk("%s:bufLength null pointer.\n",__func__);
 				return -EFAULT;
 			}
-			ts = i2c_get_clientdata(i2c_connect_client);
+			if(ts->fw_error)
+			{
+				ulVer = 0xA0;
+				if(copy_to_user(argp->bufAddr,&ulVer,sizeof(ulVer)))
+				{
+					printk("%s:get buffer error.\n",__func__);
+					return -EAGAIN;
+				}
+				return 0;
+			}
 			if(ts->cfg_reset)
 			{
 				ulVer = 0xA6;
@@ -3326,7 +3354,6 @@ static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long
 				printk("%s:get buffer error.\n",__func__);
 				return -EAGAIN;
 			}
-			ts = i2c_get_clientdata(i2c_connect_client);
 			ts->fw_total_len = bufarg.bufLength - FW_HEAD_LENGTH;
 			ts->fw_buf = pBuf;
      #if defined(NV_TOUCH_FT)
@@ -3403,6 +3430,14 @@ static long touch_ctrl_ioctl(struct file * file, unsigned int cmd, unsigned long
 	#if 1
 	case TYN_TOUCH_VENDOR:
 			//msleep(200);
+			if(ts->fw_error)
+			{
+				if(copy_to_user(bufarg.bufAddr,TRUlY_VENDOR_ID_STR,strlen(TRUlY_VENDOR_ID_STR)))
+				{
+					printk("%s:get tp_vendor info err!\n",__func__);
+				}
+				return 0;
+			}
 			vendor = gtp_get_vendor_id();
 			#if defined (TYQ_TBT5971_QHD_SUPPORT)
 			if(vendor ==4)
