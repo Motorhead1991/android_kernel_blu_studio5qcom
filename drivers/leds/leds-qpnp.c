@@ -1041,9 +1041,9 @@ static int qpnp_flash_set(struct qpnp_led_data *led)
 				goto error_flash_set;
 			}
 			/*TYRD wuchx modify for flash current 0.9A(only for ov13850) begin */
-			//Flash High max time:450ms
+			//Flash High max time:750ms
 			if( led->cdev.brightness > 650)
-				duration =  (u8) ((450 - 10) / 10);
+				duration =  (u8) ((750 - 10) / 10);
 			//Flash Low max time:1280ms or dts specifid
 			else
 				duration = led->flash_cfg->duration;
