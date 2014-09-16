@@ -523,9 +523,7 @@ static int alarm_resume(struct platform_device *pdev)
 									false);
 	spin_unlock_irqrestore(&alarm_slock, flags);
 
-	//xiangdong merge qrd patch for power-off alarm issue begin
-	set_alarm_time_to_rtc(power_on_alarm);	
-	//xiangdong merge qrd patch for power-off alarm issue end
+	set_alarm_time_to_rtc(power_on_alarm);
 	return 0;
 }
 
