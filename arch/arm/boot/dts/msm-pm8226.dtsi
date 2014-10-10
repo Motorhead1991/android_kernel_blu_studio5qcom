@@ -867,7 +867,7 @@
 				linux,name = "led:flash_0";
 //TYRD wuchx modify for flash current 0.9A(only for ov13850) begin
 				//qcom,current = <625>;
-				qcom,current = <700>;
+				qcom,current = <500>;
 //TYRD wuchx modify for flash current 0.9A(only for ov13850) end
 			};
 
